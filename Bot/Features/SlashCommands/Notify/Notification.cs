@@ -1,11 +1,10 @@
 namespace Mira.Features.SlashCommands.Notify;
 
-public class Notification(string token, string? id = null,  string? host = null, string? mention = null)
+public class Notification
 {
-    public string? Id { get; set; } = id;
-    public string Token { get; set; } = token;
-    public string? Host { get; set; } = host;
-    public string? Mention { get; set; } = mention;
-
-    public string Url => string.IsNullOrWhiteSpace(Host) ? "" : $"{Host}/{Token}";
+    public int? Id { get; set; }
+    public string Token { get; set; } = null!;
+    public ulong? HostId { get; set; }
+    public ulong? Channel { get; set; }
+    public ulong? CreatedBy { get; set; }
 }

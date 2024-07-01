@@ -1,22 +1,15 @@
 using Discord;
 using Discord.WebSocket;
+using Mira.Features.SlashCommands.Notify.Repositories;
 using Mira.Interfaces;
 
 namespace Mira.Features.SlashCommands.Notify;
 
-public class SlashCommand : ISlashCommand, IInteractable
+public class SlashCommand(QueryRepository queryRepository, CommandRepository commandRepository) : ISlashCommand, IInteractable
 {
     public string Name => "notify";
 
-    private string[] Hosts => new[] { "https://b.siobud.com", "https://stream.smoothbrain.io" };
-    private string TokenOptionName => "token";
-    private string UserOptionName => "user";
-
-    private string uniqueId = "asjkdhaukjh3243424";
-    private Notification[] db =>
-    [
-        new Notification("", id: uniqueId)
-    ];
+    private const string TokenOptionName = "token";
 
     public Task<SlashCommandProperties> BuildCommandAsync() => Task.FromResult(
         new SlashCommandBuilder()
@@ -27,31 +20,34 @@ public class SlashCommand : ISlashCommand, IInteractable
                     .WithName(TokenOptionName)
                     .WithDescription("The token the stream uses. This is usually the streamers username.")
                     .WithRequired(true)
-                    .WithType(ApplicationCommandOptionType.String),
-                new SlashCommandOptionBuilder()
-                    .WithName(UserOptionName)
-                    .WithDescription("The discord user associated with this stream.")
-                    .WithType(ApplicationCommandOptionType.User)
+                    .WithType(ApplicationCommandOptionType.String)
             )
             .Build());
 
     public async Task RespondAsync(SocketSlashCommand command)
     {
         var token = command.Data.Options.FirstOrDefault(x => x.Name == TokenOptionName)?.Value?.ToString();
-        var user = command.Data.Options.FirstOrDefault(x => x.Name == UserOptionName)?.Value?.ToString();
+        var channel = command.ChannelId;
+        var createdBy = command.User.Id;
         if (string.IsNullOrWhiteSpace(token))
         {
             // Return failure message
             return;
         }
 
-        var notification = db.First();
-        notification.Token = token;
-        notification.Mention = user;
+        var notification = new Notification
+        {
+            Token = token,
+            Channel = channel,
+            CreatedBy = createdBy
+        };
+
+        var id = await commandRepository.AddNotification(notification);
+        var hosts = await queryRepository.GetHostsAsync(channel);
 
         var options = new ComponentBuilder()
-            .WithSelectMenu(uniqueId,
-            Hosts.Select(host => new SelectMenuOptionBuilder(host, host)).ToList())
+            .WithSelectMenu(id.ToString(),
+            hosts.Select(host => new SelectMenuOptionBuilder(host.Url, host.Id.ToString())).ToList())
             .Build();
 
         await command.RespondAsync("Select a host:", components: options, ephemeral: true);
@@ -64,22 +60,35 @@ public class SlashCommand : ISlashCommand, IInteractable
         {
             return;
         }
+
+        if (!int.TryParse(component.Data.CustomId, out var id))
+        {
+            // Throw error
+            return;
+        }
         
-        var record = db.FirstOrDefault(x => x.Id == component.Data.CustomId);
-        if (record is null)
+        await interaction.DeferAsync(ephemeral: true);
+        
+        var record = await queryRepository.GetNotificationAsync(id);
+        if (record?.Id is null)
         {
             return;
         }
 
-        await interaction.DeferAsync(ephemeral: true);
+        if (!int.TryParse(component.Data.Values.FirstOrDefault(), out var hostId))
+        {
+            return;
+        }
 
-        var host = component.Data.Values.FirstOrDefault();
-        record.Host = host;
+        var host = await queryRepository.GetHostAsync(hostId);
+        var url = $"{host.Url}/{record.Token}";
+
+        await commandRepository.UpdateNotification(record.Id ?? throw new ArgumentException(), hostId);
         
         await interaction.ModifyOriginalResponseAsync(message =>
         {
-            message.Content = $"Notification created! {record.Mention} Url: {record.Url}";
-            message.Components = new ComponentBuilder().WithButton("Watch now!", style: ButtonStyle.Link, url: $"{record.Url}").Build();
+            message.Content = $"Notification created! Url: {url}";
+            message.Components = new ComponentBuilder().WithButton("Watch now!", style: ButtonStyle.Link, url: url).Build();
         });
     }
 }

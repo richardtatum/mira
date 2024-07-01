@@ -1,19 +1,35 @@
 ﻿using Discord;
 using Discord.WebSocket;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
+using Mira.Data;
 using Mira.Extensions;
 using Mira.Features.SlashCommands;
+using Mira.Features.SlashCommands.Notify.Repositories;
 
 var host = await Host.CreateDefaultBuilder()
-    .ConfigureServices((_, services) =>
+    .ConfigureServices((host, services) =>
     {
+        var conn = host.Configuration.GetConnectionString("Primary");
         // Add services here.
         services.TryAddScoped<DiscordSocketClient>();
+        services.AddSingleton<DbContext>();
         services.AddSlashCommands();
+        
+        // HOW TO DO THIS DYNAMICALLY?
+        services.TryAddScoped<QueryRepository>();
+        services.TryAddScoped<CommandRepository>();
     })
     .StartAsync();
+
+{
+    // Ensure the DB is initialised
+    using var scope = host.Services.CreateScope();
+    var context = scope.ServiceProvider.GetRequiredService<DbContext>();
+    await context.InitAsync();
+}
 
 var client = host.Services.GetRequiredService<DiscordSocketClient>();
 var slashCommandBuilder = host.Services.GetRequiredService<Builder>();
@@ -32,9 +48,6 @@ client.Log += message =>
 client.Ready += slashCommandBuilder.OnReadyAsync;
 client.SlashCommandExecuted += slashCommandHandler.HandleCommandExecutedAsync;
 client.InteractionCreated += slashCommandHandler.HandleInteractionCreatedAsync;
-
-// Look into the following:
-// client.SelectMenuExecuted +=
 
 // Keep connection open
 await Task.Delay(Timeout.Infinite);
