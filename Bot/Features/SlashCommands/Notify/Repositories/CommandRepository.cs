@@ -11,12 +11,12 @@ public class CommandRepository(DbContext context)
         // Query single allows us to return the ID of the inserted row
         return await connection.QuerySingleAsync<int>(
             @"INSERT INTO notification
-                (token, channel, created_by)
+                (stream_key, channel, created_by)
                 VALUES
-                (@token, @channel, @createdBy)
+                (@streamKey, @channel, @createdBy)
                 RETURNING id", new
             {
-                token = notification.Token,
+                streamKey = notification.StreamKey,
                 channel = notification.Channel,
                 createdBy = notification.CreatedBy
             });

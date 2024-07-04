@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS host (
 CREATE TABLE IF NOT EXISTS notification (
     id INTEGER PRIMARY KEY NOT NULL,
     host_id INTEGER NULL,
-    token TEXT NULL,
+    stream_key TEXT NULL,
     channel TEXT NOT NULL,
     created_by INTEGER NOT NULL,
     FOREIGN KEY (host_id) REFERENCES host(id)

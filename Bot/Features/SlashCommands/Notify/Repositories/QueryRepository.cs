@@ -32,7 +32,7 @@ public class QueryRepository(DbContext context)
     {
         using var connection = context.CreateConnection();
         return await connection.QueryFirstAsync<Notification>(
-            "SELECT id, token, channel, created_by createdBy FROM notification WHERE id = @id", new
+            "SELECT id, stream_key streamKey, channel, created_by createdBy FROM notification WHERE id = @id", new
             {
                 id
             });

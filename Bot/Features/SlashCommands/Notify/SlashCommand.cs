@@ -9,7 +9,7 @@ public class SlashCommand(QueryRepository queryRepository, CommandRepository com
 {
     public string Name => "notify";
 
-    private const string TokenOptionName = "token";
+    private const string StreamKeyOptionName = "streamkey";
 
     public Task<SlashCommandProperties> BuildCommandAsync() => Task.FromResult(
         new SlashCommandBuilder()
@@ -17,8 +17,8 @@ public class SlashCommand(QueryRepository queryRepository, CommandRepository com
             .WithDescription("Notify when a user begins streaming.")
             .AddOptions(
                 new SlashCommandOptionBuilder()
-                    .WithName(TokenOptionName)
-                    .WithDescription("The token the stream uses. This is usually the streamers username.")
+                    .WithName(StreamKeyOptionName)
+                    .WithDescription("The key the stream uses. This is usually the streamers username.")
                     .WithRequired(true)
                     .WithType(ApplicationCommandOptionType.String)
             )
@@ -26,10 +26,10 @@ public class SlashCommand(QueryRepository queryRepository, CommandRepository com
 
     public async Task RespondAsync(SocketSlashCommand command)
     {
-        var token = command.Data.Options.FirstOrDefault(x => x.Name == TokenOptionName)?.Value?.ToString();
+        var streamKey = command.Data.Options.FirstOrDefault(x => x.Name == StreamKeyOptionName)?.Value?.ToString();
         var channel = command.ChannelId;
         var createdBy = command.User.Id;
-        if (string.IsNullOrWhiteSpace(token))
+        if (string.IsNullOrWhiteSpace(streamKey))
         {
             // Return failure message
             return;
@@ -37,7 +37,7 @@ public class SlashCommand(QueryRepository queryRepository, CommandRepository com
 
         var notification = new Notification
         {
-            Token = token,
+            StreamKey = streamKey,
             Channel = channel,
             CreatedBy = createdBy
         };
@@ -81,7 +81,7 @@ public class SlashCommand(QueryRepository queryRepository, CommandRepository com
         }
 
         var host = await queryRepository.GetHostAsync(hostId);
-        var url = $"{host.Url}/{record.Token}";
+        var url = $"{host.Url}/{record.StreamKey}";
 
         await commandRepository.UpdateNotification(record.Id ?? throw new ArgumentException(), hostId);
         
