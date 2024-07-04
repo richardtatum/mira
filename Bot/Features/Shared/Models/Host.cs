@@ -1,4 +1,4 @@
-namespace Mira.Features.SlashCommands.Notify;
+namespace Mira.Features.Shared.Models;
 
 public class Host
 {

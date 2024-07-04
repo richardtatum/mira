@@ -1,6 +1,5 @@
 ﻿using Discord;
 using Discord.WebSocket;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
@@ -8,19 +7,26 @@ using Mira.Data;
 using Mira.Extensions;
 using Mira.Features.SlashCommands;
 using Mira.Features.SlashCommands.Notify.Repositories;
+using Mira.Features.StreamChecker;
 
 var host = await Host.CreateDefaultBuilder()
     .ConfigureServices((host, services) =>
     {
-        var conn = host.Configuration.GetConnectionString("Primary");
         // Add services here.
         services.TryAddScoped<DiscordSocketClient>();
         services.AddSingleton<DbContext>();
         services.AddSlashCommands();
-        
-        // HOW TO DO THIS DYNAMICALLY?
+
+        services.AddHttpClient();
+
+        // THESE NEED TO BE EXTENSIONS OR LOADED DYNAMICALLY
+        services.AddHostedService<PeriodicStreamKeyChecker>();
+        services.AddScoped<StreamNotificationService>();
+        services.TryAddScoped<BroadcastBoxClient>();
         services.TryAddScoped<QueryRepository>();
         services.TryAddScoped<CommandRepository>();
+        services.AddScoped<Mira.Features.StreamChecker.Repositories.QueryRepository>();
+        services.AddScoped<Mira.Features.StreamChecker.Repositories.CommandRepository>();
     })
     .StartAsync();
 
@@ -32,14 +38,16 @@ var host = await Host.CreateDefaultBuilder()
 }
 
 var client = host.Services.GetRequiredService<DiscordSocketClient>();
-var slashCommandBuilder = host.Services.GetRequiredService<Builder>();
+var slashCommandBuilder = host.Services.GetRequiredService<Mira.Features.SlashCommands.Builder>();
 var slashCommandHandler = host.Services.GetRequiredService<Handler>();
 
 // var token = Environment.GetEnvironmentVariable("DISCORD_TOKEN");
+// TODO: Dispose of this development token
 var token = "MTI1MDQ0NzIyOTU3MjA4NzgwOA.Ga3hQi.D9KFNvJfaXKU8hwfmJbfLSS-czBJCUTgtCit_s";
 await client.LoginAsync(TokenType.Bot, token);
 await client.StartAsync();
 
+//TODO: Update to logging service
 client.Log += message =>
 {
     Console.WriteLine(message);

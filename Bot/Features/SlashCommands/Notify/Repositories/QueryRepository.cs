@@ -1,5 +1,6 @@
 using Dapper;
 using Mira.Data;
+using Mira.Features.Shared.Models;
 
 namespace Mira.Features.SlashCommands.Notify.Repositories;
 

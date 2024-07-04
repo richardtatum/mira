@@ -1,5 +1,6 @@
 using Discord;
 using Discord.WebSocket;
+using Mira.Features.Shared.Models;
 using Mira.Features.SlashCommands.Notify.Repositories;
 using Mira.Interfaces;
 
