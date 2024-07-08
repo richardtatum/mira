@@ -1,6 +1,6 @@
 namespace Mira.Features.Shared.Models;
 
-public class Notification : IEquatable<Notification>
+public class Subscription : IEquatable<Subscription>
 {
     public int? Id { get; set; }
     public string StreamKey { get; set; } = null!;
@@ -8,7 +8,7 @@ public class Notification : IEquatable<Notification>
     public ulong? Channel { get; set; }
     public ulong? CreatedBy { get; set; }
 
-    public bool Equals(Notification? other)
+    public bool Equals(Subscription? other)
     {
         if (ReferenceEquals(null, other)) return false;
         if (ReferenceEquals(this, other)) return true;
@@ -20,7 +20,7 @@ public class Notification : IEquatable<Notification>
         if (ReferenceEquals(null, obj)) return false;
         if (ReferenceEquals(this, obj)) return true;
         if (obj.GetType() != this.GetType()) return false;
-        return Equals((Notification)obj);
+        return Equals((Subscription)obj);
     }
 
     public override int GetHashCode()

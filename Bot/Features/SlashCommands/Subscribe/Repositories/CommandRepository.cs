@@ -6,31 +6,31 @@ namespace Mira.Features.SlashCommands.Notify.Repositories;
 
 public class CommandRepository(DbContext context)
 {
-    internal async Task<int> AddNotification(Notification notification)
+    internal async Task<int> AddSubscription(Subscription subscription)
     {
         using var connection = context.CreateConnection();
+
         // Query single allows us to return the ID of the inserted row
         return await connection.QuerySingleAsync<int>(
-            @"INSERT INTO notification
+            @"INSERT INTO subscription
                 (stream_key, channel, created_by)
                 VALUES
                 (@streamKey, @channel, @createdBy)
                 RETURNING id", new
             {
-                streamKey = notification.StreamKey,
-                channel = notification.Channel,
-                createdBy = notification.CreatedBy
+                streamKey = subscription.StreamKey,
+                channel = subscription.Channel,
+                createdBy = subscription.CreatedBy
             });
     }
 
-    internal async Task UpdateNotification(int notificationId, int hostId)
+    internal async Task UpdateSubscription(int subscriptionId, int hostId)
     {
         using var connection = context.CreateConnection();
         await connection.ExecuteAsync(
-            @"UPDATE notification SET host_id = @hostId WHERE id = @notificationId", new
+            @"UPDATE subscription SET host_id = @hostId WHERE id = @subscriptionId", new
             {
-                hostId,
-                notificationId
+                hostId, subscriptionId = subscriptionId
             });
     }
 }

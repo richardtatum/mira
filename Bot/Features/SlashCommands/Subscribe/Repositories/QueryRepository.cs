@@ -29,11 +29,11 @@ public class QueryRepository(DbContext context)
             });
     }
 
-    internal async Task<Notification?> GetNotificationAsync(int id)
+    internal async Task<Subscription?> GetSubscriptionAsync(int id)
     {
         using var connection = context.CreateConnection();
-        return await connection.QueryFirstAsync<Notification>(
-            "SELECT id, stream_key streamKey, channel, created_by createdBy FROM notification WHERE id = @id", new
+        return await connection.QueryFirstAsync<Subscription>(
+            "SELECT id, stream_key streamKey, channel, created_by createdBy FROM subscription WHERE id = @id", new
             {
                 id
             });

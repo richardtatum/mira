@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS host (
     UNIQUE (url, guild_id)
 );
 
-CREATE TABLE IF NOT EXISTS notification (
+CREATE TABLE IF NOT EXISTS subscription (
     id INTEGER PRIMARY KEY NOT NULL,
     host_id INTEGER NULL,
     stream_key TEXT NULL,
@@ -16,12 +16,12 @@ CREATE TABLE IF NOT EXISTS notification (
 
 CREATE TABLE IF NOT EXISTS stream (
     id INTEGER PRIMARY KEY NOT NULL,
-    notification_id INTEGER NOT NULL,
+    subscription_id INTEGER NOT NULL,
     status INTEGER NOT NULL,
     start_time TEXT NOT NULL,
     end_time TEXT NULL,
-    FOREIGN KEY (notification_id) REFERENCES notification(id),
-    UNIQUE (notification_id)
+    FOREIGN KEY (subscription_id) REFERENCES subscription(id),
+    UNIQUE (subscription_id)
 );
 
 -- We use -1 here to denote available to all guilds. Traditionally I would have set it as null

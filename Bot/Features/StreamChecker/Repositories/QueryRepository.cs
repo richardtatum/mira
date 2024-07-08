@@ -6,34 +6,34 @@ namespace Mira.Features.StreamChecker.Repositories;
 
 public class QueryRepository(DbContext context)
 {
-    internal async Task<StreamRecord[]> GetLiveStreamsAsync(IEnumerable<int> notificationIds)
+    internal async Task<StreamRecord[]> GetLiveStreamsAsync(IEnumerable<int> subscriptionIds)
     {
         using var connection = context.CreateConnection();
 
         var results = await connection.QueryAsync<StreamRecord>(
-            @"SELECT id, notification_id notificationId, status, start_time startTime, end_time endTime
+            @"SELECT id, subscription_id subscriptionId, status, start_time startTime, end_time endTime
                 FROM stream
-                WHERE notification_id IN (@notificationIds) AND status = @live", new
+                WHERE subscription_id IN (@subscriptionIds) AND status = @live", new
             {
-                notificationIds,
+                subscriptionIds,
                 live = StreamStatus.Live
             });
 
         return results.ToArray();
     }
 
-    internal async Task<NotificationSummary> GetNotificationSummaryAsync(int notificationId)
+    internal async Task<SubscriptionSummary> GetSubscriptionSummaryAsync(int subscriptionId)
     {
         using var connection = context.CreateConnection();
 
-        return await connection.QueryFirstAsync<NotificationSummary>(
+        return await connection.QueryFirstAsync<SubscriptionSummary>(
             @"SELECT h.url host, n.stream_key streamKey, n.channel, s.start_time startTime, s.end_time endTime
-                FROM notification n
+                FROM subscription n
                 INNER JOIN host h ON h.id = n.host_id
-                INNER JOIN stream s ON s.notification_id = n.id
-                WHERE n.id = @notificationId", new
+                INNER JOIN stream s ON s.subscription_id = n.id
+                WHERE n.id = @subscriptionId", new
             {
-                notificationId
+                subscriptionId
             });
     }
 
@@ -46,12 +46,12 @@ public class QueryRepository(DbContext context)
         return results.ToArray();
     }
 
-    internal async Task<Notification[]> GetNotificationsAsync(int hostId)
+    internal async Task<Subscription[]> GetSubscriptionsAsync(int hostId)
     {
         using var connection = context.CreateConnection();
-        var results = await connection.QueryAsync<Notification>(
+        var results = await connection.QueryAsync<Subscription>(
             @"SELECT id, stream_key streamKey, host_id hostId, channel, created_by createdBy 
-                FROM notification
+                FROM subscription
                 WHERE host_id = @hostId", new
         {
             hostId

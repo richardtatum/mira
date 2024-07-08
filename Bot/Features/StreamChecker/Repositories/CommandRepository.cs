@@ -10,12 +10,12 @@ public class CommandRepository(DbContext context)
     {
         using var connection = context.CreateConnection();
         await connection.ExecuteAsync(
-            @"INSERT INTO stream (notification_id, status, start_time)
-                VALUES (@notificationId, @status, @startTime)
-                ON CONFLICT (notification_id) DO UPDATE
+            @"INSERT INTO stream (subscription_id, status, start_time)
+                VALUES (@subscriptionId, @status, @startTime)
+                ON CONFLICT (subscription_id) DO UPDATE
                 SET status = @status, start_time = @startTime, end_time = @endTime", new
             {
-                notificationId = stream.NotificationId,
+                subscriptionId = stream.SubscriptionId,
                 status = stream.Status,
                 startTime = stream.StartTime,
                 endTime = stream.EndTime

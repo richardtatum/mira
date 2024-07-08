@@ -8,14 +8,13 @@ namespace Mira.Features.SlashCommands.Notify;
 
 public class SlashCommand(QueryRepository queryRepository, CommandRepository commandRepository) : ISlashCommand, IInteractable
 {
-    public string Name => "notify";
-
+    public string Name => "subscribe";
     private const string StreamKeyOptionName = "streamkey";
 
     public Task<SlashCommandProperties> BuildCommandAsync() => Task.FromResult(
         new SlashCommandBuilder()
             .WithName(Name)
-            .WithDescription("Notify when a user begins streaming.")
+            .WithDescription("Be notified when a user begins streaming.")
             .AddOptions(
                 new SlashCommandOptionBuilder()
                     .WithName(StreamKeyOptionName)
@@ -36,14 +35,14 @@ public class SlashCommand(QueryRepository queryRepository, CommandRepository com
             return;
         }
 
-        var notification = new Notification
+        var subscription = new Subscription
         {
             StreamKey = streamKey,
             Channel = channel,
             CreatedBy = createdBy
         };
 
-        var id = await commandRepository.AddNotification(notification);
+        var id = await commandRepository.AddSubscription(subscription);
         var hosts = await queryRepository.GetHostsAsync(channel);
 
         var options = new ComponentBuilder()
@@ -70,7 +69,7 @@ public class SlashCommand(QueryRepository queryRepository, CommandRepository com
         
         await interaction.DeferAsync(ephemeral: true);
         
-        var record = await queryRepository.GetNotificationAsync(id);
+        var record = await queryRepository.GetSubscriptionAsync(id);
         if (record?.Id is null)
         {
             return;
@@ -84,11 +83,12 @@ public class SlashCommand(QueryRepository queryRepository, CommandRepository com
         var host = await queryRepository.GetHostAsync(hostId);
         var url = $"{host.Url}/{record.StreamKey}";
 
-        await commandRepository.UpdateNotification(record.Id ?? throw new ArgumentException(), hostId);
+        // TODO: Better handle null ids
+        await commandRepository.UpdateSubscription(record.Id ?? throw new ArgumentException(), hostId);
         
         await interaction.ModifyOriginalResponseAsync(message =>
         {
-            message.Content = $"Notification created! Url: {url}";
+            message.Content = $"Subscription created! Url: {url}";
             message.Components = new ComponentBuilder().WithButton("Watch now!", style: ButtonStyle.Link, url: url).Build();
         });
     }
