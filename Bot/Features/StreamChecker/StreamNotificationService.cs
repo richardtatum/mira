@@ -36,10 +36,11 @@ public class StreamNotificationService
         
         // TODO: Better handle these null Ids, maybe a DTO?
         var notificationIds = notifications.Select(x => x.Id ?? 0).Where(x => x != 0).ToArray();
-        var liveKeys = await _client.GetLiveStreamKeysAsync(host.Url);
+        var streamKeys = await _client.GetStreamKeysAsync(host.Url);
+        var liveStreamKeys = streamKeys.Where(stream => stream.IsLive).Select(stream => stream.StreamKey);
         
         var subscribedLiveStreams = notifications
-            .Where(notification => liveKeys.Contains(notification.StreamKey))
+            .Where(notification => liveStreamKeys.Contains(notification.StreamKey))
             .ToArray();
         var subscribedOfflineStreams = notifications
             .Except(subscribedLiveStreams)

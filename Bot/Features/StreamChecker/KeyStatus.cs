@@ -5,6 +5,8 @@ public class KeyStatus
     public string StreamKey { get; set; }
     public long FirstSeenEpoch { get; set; }
     public KeyStream[] VideoStreams { get; set; } = [];
+    public bool IsLive => VideoStreams.Any(stream => stream.SecondsSinceLastFrame < 30);
+
 }
 
 public class KeyStream
@@ -13,4 +15,5 @@ public class KeyStream
     public long PacketsReceived { get; set; }
     public DateTime LastKeyFrameSeen { get; set; }
     public double SecondsSinceLastFrame => DateTime.UtcNow.Subtract(LastKeyFrameSeen).TotalSeconds;
+    
 }

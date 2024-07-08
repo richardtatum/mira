@@ -14,7 +14,7 @@ public class BroadcastBoxClient
         _logger = logger;
     }
 
-    public async Task<IEnumerable<string>> GetLiveStreamKeysAsync(string host)
+    public async Task<IEnumerable<KeyStatus>> GetStreamKeysAsync(string host)
     {
         if (string.IsNullOrWhiteSpace(host))
         {
@@ -37,10 +37,6 @@ public class BroadcastBoxClient
             _logger.LogError("[BROADCASTBOXCLIENT] Failed to extract KeyStatus models from JSON. Raw response: {Response}", rawResponse);
         }
 
-        // If a viewer keeps the stream open, the video streams aren't removed. Check the time the last frame was sent and if its over
-        // a threshold, count it as closed
-        return statuses?
-            .Where(status => status.VideoStreams.Length != 0 && status.VideoStreams.Any(x => x.SecondsSinceLastFrame < 30 ))
-            .Select(status => status.StreamKey) ?? [];
+        return statuses ?? [];
     }
 }
