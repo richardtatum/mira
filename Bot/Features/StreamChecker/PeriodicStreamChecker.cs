@@ -38,11 +38,11 @@ public class PeriodicStreamChecker : BackgroundService
 
                 _logger.LogInformation(
                     "[HOST-CHECKER] New host found: {Host}. Creating subscription. Interval: {Seconds}s", host.Url,
-                    TimeSpan.FromSeconds(30).TotalSeconds);
+                    host.PollIntervalSeconds);
 
                 var cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(stoppingToken);
                 subscribedHosts[host.Id] = cancellationSource;
-                _ = SubscribeToHostAsync(TimeSpan.FromSeconds(30), host, cancellationSource.Token);
+                _ = SubscribeToHostAsync(TimeSpan.FromSeconds(host.PollIntervalSeconds), host, cancellationSource.Token);
             }
         }
     }

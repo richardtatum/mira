@@ -41,7 +41,7 @@ public class QueryRepository(DbContext context)
     {
         using var connection = context.CreateConnection();
         var results = await connection.QueryAsync<Host>(
-            @"SELECT id, url, guild_id guildId FROM host");
+            "SELECT id, url, poll_interval_seconds pollIntervalSeconds, guild_id guildId FROM host");
 
         return results.ToArray();
     }
