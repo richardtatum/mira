@@ -14,7 +14,7 @@ public class BroadcastBoxClient
         _logger = logger;
     }
 
-    public async Task<IEnumerable<KeyStatus>> GetStreamKeysAsync(string host)
+    public async Task<IEnumerable<KeyStatus>> GetStreamsAsync(string host)
     {
         if (string.IsNullOrWhiteSpace(host))
         {
@@ -26,7 +26,7 @@ public class BroadcastBoxClient
         var result = await client.GetAsync($"{host}/api/status");
         if (!result.IsSuccessStatusCode)
         {
-            _logger.LogError("[BROADCASTBOXCLIENT] Failed to make get request to {Host}/api/status. Status code: {Status}", host, result.StatusCode);
+            _logger.LogError("[BROADCASTBOX-CLIENT] Failed to make get request to {Host}/api/status. Status code: {Status}", host, result.StatusCode);
             return [];
         }
 
@@ -34,7 +34,7 @@ public class BroadcastBoxClient
         if (statuses is null)
         {
             var rawResponse = await result.Content.ReadAsStringAsync();
-            _logger.LogError("[BROADCASTBOXCLIENT] Failed to extract KeyStatus models from JSON. Raw response: {Response}", rawResponse);
+            _logger.LogError("[BROADCASTBOX-CLIENT] Failed to extract KeyStatus models from JSON. Raw response: {Response}", rawResponse);
         }
 
         return statuses ?? [];

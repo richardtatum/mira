@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using Discord;
 using Discord.WebSocket;
 using Microsoft.Extensions.Logging;
@@ -26,18 +25,17 @@ public class StreamNotificationService
 
     // What if the same streamKey and host across multiple servers?
     // TODO: Better name, less generic. SOLID principles mean break this down! Split INTERFACES!
-    internal async Task CheckStreamsAsync(Host host, Notification[] notifications)
+    internal async Task CheckStreamsAsync(string hostUrl, Notification[] notifications)
     {
         if (notifications.Length == 0)
         {
-            _logger.LogInformation("[NOTIFICATION-SERVICE] No notifications provided for host {Host}. Skipping.", host.Url);
+            _logger.LogInformation("[NOTIFICATION-SERVICE] No notifications provided for host {Host}. Skipping.", hostUrl);
             return;
         }
         
-        // TODO: Better handle these null Ids, maybe a DTO?
-        var notificationIds = notifications.Select(x => x.Id ?? 0).Where(x => x != 0).ToArray();
-        var streamKeys = await _client.GetStreamKeysAsync(host.Url);
-        var liveStreamKeys = streamKeys.Where(stream => stream.IsLive).Select(stream => stream.StreamKey);
+
+        var streams = await _client.GetStreamsAsync(hostUrl);
+        var liveStreamKeys = streams.Where(stream => stream.IsLive).Select(stream => stream.StreamKey);
         
         var subscribedLiveStreams = notifications
             .Where(notification => liveStreamKeys.Contains(notification.StreamKey))
@@ -46,7 +44,9 @@ public class StreamNotificationService
             .Except(subscribedLiveStreams)
             .ToArray();
         
+        // TODO: Better handle these null Ids, maybe a DTO?
         // These are streams recorded as being live right now in the system
+        var notificationIds = notifications.Select(x => x.Id ?? 0).Where(x => x != 0).ToArray();
         var liveStreams = await _query.GetLiveStreamsAsync(notificationIds);
 
         var newOfflineStreams = liveStreams
@@ -78,6 +78,7 @@ public class StreamNotificationService
         }
     }
 
+    // Pass the message to this, some abstraction of a component perhaps?
     private async Task SendStatusMessage(int notificationId, StreamStatus status)
     {
         var notification = await _query.GetNotificationSummaryAsync(notificationId);
