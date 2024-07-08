@@ -26,16 +26,15 @@ public class StreamNotificationService
     // What if the same streamKey and host across multiple servers?
     // TODO: Better name, less generic. SOLID principles mean break this down! Split INTERFACES!
     // TODO: Move this into its own service that calls the notification service to create/send the message
-    internal async Task CheckStreamsAsync(string hostUrl, Subscription[] subscriptions)
+    internal async Task CheckStreamsAsync(Host host, Subscription[] subscriptions)
     {
         if (subscriptions.Length == 0)
         {
-            _logger.LogInformation("[NOTIFICATION-SERVICE] No subscriptions provided for host {Host}. Skipping.", hostUrl);
+            _logger.LogInformation("[NOTIFICATION-SERVICE] No subscriptions provided for hostId {Host}. Skipping.", host.Url);
             return;
         }
         
-
-        var streams = await _client.GetStreamsAsync(hostUrl);
+        var streams = await _client.GetStreamsAsync(host.Url);
         var liveStreamKeys = streams.Where(stream => stream.IsLive).Select(stream => stream.StreamKey);
         
         var subscribedLiveStreams = subscriptions

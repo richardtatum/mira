@@ -20,7 +20,7 @@ var host = await Host.CreateDefaultBuilder()
         services.AddHttpClient();
 
         // THESE NEED TO BE EXTENSIONS OR LOADED DYNAMICALLY
-        services.AddHostedService<PeriodicStreamKeyChecker>();
+        services.AddHostedService<PeriodicStreamChecker>(); // TODO: Set this to ignore failures
         services.AddScoped<StreamNotificationService>();
         services.TryAddScoped<BroadcastBoxClient>();
         services.TryAddScoped<QueryRepository>();
