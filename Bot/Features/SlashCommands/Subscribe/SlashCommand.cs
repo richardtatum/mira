@@ -1,10 +1,10 @@
 using Discord;
 using Discord.WebSocket;
 using Mira.Features.Shared.Models;
-using Mira.Features.SlashCommands.Notify.Repositories;
+using Mira.Features.SlashCommands.Subscribe.Repositories;
 using Mira.Interfaces;
 
-namespace Mira.Features.SlashCommands.Notify;
+namespace Mira.Features.SlashCommands.Subscribe;
 
 public class SlashCommand(QueryRepository queryRepository, CommandRepository commandRepository)
     : ISlashCommand, ISelectable
