@@ -1,5 +1,6 @@
 using System.Net.Http.Json;
 using Microsoft.Extensions.Logging;
+using Mira.Features.StreamChecker.Models;
 
 namespace Mira.Features.StreamChecker;
 

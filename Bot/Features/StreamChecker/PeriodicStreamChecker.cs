@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Mira.Features.StreamChecker.Repositories;
-using Host = Mira.Features.Shared.Models.Host;
+using Host = Mira.Features.StreamChecker.Models.Host;
 
 namespace Mira.Features.StreamChecker;
 

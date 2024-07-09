@@ -1,6 +1,6 @@
 using Dapper;
 using Mira.Data;
-using Mira.Features.Shared.Models;
+using Mira.Features.StreamChecker.Models;
 
 namespace Mira.Features.StreamChecker.Repositories;
 

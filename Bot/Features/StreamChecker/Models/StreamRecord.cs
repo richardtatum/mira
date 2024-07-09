@@ -1,4 +1,4 @@
-namespace Mira.Features.Shared.Models;
+namespace Mira.Features.StreamChecker.Models;
 
 public class StreamRecord
 {

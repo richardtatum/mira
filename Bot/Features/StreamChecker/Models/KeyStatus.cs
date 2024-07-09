@@ -1,4 +1,4 @@
-namespace Mira.Features.StreamChecker;
+namespace Mira.Features.StreamChecker.Models;
 
 public class KeyStatus
 {
