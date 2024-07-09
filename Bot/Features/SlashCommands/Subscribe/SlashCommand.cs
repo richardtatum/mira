@@ -1,6 +1,6 @@
 using Discord;
 using Discord.WebSocket;
-using Mira.Features.Shared.Models;
+using Mira.Features.SlashCommands.Subscribe.Models;
 using Mira.Features.SlashCommands.Subscribe.Repositories;
 using Mira.Interfaces;
 
@@ -29,25 +29,29 @@ public class SlashCommand(QueryRepository queryRepository, CommandRepository com
     public async Task RespondAsync(SocketSlashCommand command)
     {
         var streamKey = command.Data.Options.First(x => x.Name == StreamKeyOptionName).Value.ToString();
-        var channel = command.ChannelId;
-        var createdBy = command.User.Id;
         if (string.IsNullOrWhiteSpace(streamKey))
         {
             // Return failure message
+            return;
+        }
+        
+        var channelId = command.ChannelId;
+        var guildId = command.GuildId;
+        if (channelId is null || guildId is null)
+        {
+            // Failure message
             return;
         }
 
         var subscription = new Subscription
         {
             StreamKey = streamKey,
-            Channel = channel,
-            CreatedBy = createdBy
+            Channel = channelId,
+            CreatedBy = command.User.Id
         };
         
-        // Need to defer here?
-
         var subscriptionId = await commandRepository.AddSubscription(subscription);
-        var hosts = await queryRepository.GetHostsAsync(channel);
+        var hosts = await queryRepository.GetHostsAsync(guildId.Value);
         var hostOptions = hosts
             .Select(host => new SelectMenuOptionBuilder(host.Url, host.Id.ToString(), $"A notification will be made for {host.Url}/{streamKey}"))
             .ToList();
