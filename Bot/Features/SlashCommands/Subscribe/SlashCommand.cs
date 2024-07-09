@@ -53,7 +53,7 @@ public class SlashCommand(QueryRepository queryRepository, CommandRepository com
         var subscriptionId = await commandRepository.AddSubscription(subscription);
         var hosts = await queryRepository.GetHostsAsync(guildId.Value);
         var hostOptions = hosts
-            .Select(host => new SelectMenuOptionBuilder(host.Url, host.Id.ToString(), $"A notification will be made for {host.Url}/{streamKey}"))
+            .Select(host => new SelectMenuOptionBuilder(host.Url, host.Id.ToString(), $"Create notification for {host.Url}/{streamKey}"))
             .ToList();
 
         var component = new ComponentBuilder()
