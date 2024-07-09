@@ -5,20 +5,12 @@ using Host = Mira.Features.StreamChecker.Models.Host;
 
 namespace Mira.Features.StreamChecker;
 
-public class PeriodicStreamChecker : BackgroundService
+public class PeriodicStreamChecker(
+    QueryRepository query,
+    StreamNotificationService service,
+    ILogger<PeriodicStreamChecker> logger)
+    : BackgroundService
 {
-    private readonly QueryRepository _query;
-    private readonly StreamNotificationService _service;
-    private readonly ILogger<PeriodicStreamChecker> _logger;
-
-    public PeriodicStreamChecker(QueryRepository query, StreamNotificationService service,
-        ILogger<PeriodicStreamChecker> logger)
-    {
-        _query = query;
-        _service = service;
-        _logger = logger;
-    }
-
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         using var timer = new PeriodicTimer(TimeSpan.FromSeconds(60));
@@ -27,8 +19,8 @@ public class PeriodicStreamChecker : BackgroundService
         var subscribedHosts = new Dictionary<int, (CancellationTokenSource cancellationTokenSource, string url)>();
         while (await timer.WaitForNextTickAsync(stoppingToken))
         {
-            _logger.LogInformation("[HOST-CHECKER] Checking for new hosts.");
-            var hosts = await _query.GetHostsAsync();
+            logger.LogInformation("[HOST-CHECKER] Checking for new hosts.");
+            var hosts = await query.GetHostsAsync();
             foreach (var host in hosts)
             {
                 if (subscribedHosts.ContainsKey(host.Id))
@@ -36,7 +28,7 @@ public class PeriodicStreamChecker : BackgroundService
                     continue;
                 }
 
-                _logger.LogInformation(
+                logger.LogInformation(
                     "[HOST-CHECKER] New host found: {Host}. Creating subscription. Interval: {Seconds}s", host.Url,
                     host.PollIntervalSeconds);
 
@@ -67,17 +59,17 @@ public class PeriodicStreamChecker : BackgroundService
         using var timer = new PeriodicTimer(period);
         while (await timer.WaitForNextTickAsync(stoppingToken))
         {
-            var subscriptions = await _query.GetSubscriptionsAsync(host.Id);
+            var subscriptions = await query.GetSubscriptionsAsync(host.Id);
             if (subscriptions.Length == 0)
             {
-                _logger.LogInformation("[KEY-CHECKER][{Host}] No key subscriptions found. Skipping.", host.Url);
+                logger.LogInformation("[KEY-CHECKER][{Host}] No key subscriptions found. Skipping.", host.Url);
                 return;
             }
 
-            _logger.LogInformation(
+            logger.LogInformation(
                 "[KEY-CHECKER][{Host}] {Subscriptions} key subscription(s) found. Checking for stream updates.",
                 host.Url, subscriptions.Length);
-            await _service.CheckStreamsAsync(host, subscriptions);
+            await service.CheckStreamsAsync(host, subscriptions);
         }
     }
 
@@ -87,7 +79,7 @@ public class PeriodicStreamChecker : BackgroundService
         var cancellationTasks = staleHosts.Select(entry =>
         {
             var (cancellationSource, url) = entry;
-            _logger.LogInformation("[HOST-CHECKER][{Host}] Host no longer registered in the database. Cancelling.",
+            logger.LogInformation("[HOST-CHECKER][{Host}] Host no longer registered in the database. Cancelling.",
                 url);
             return cancellationSource.CancelAsync();
         });
