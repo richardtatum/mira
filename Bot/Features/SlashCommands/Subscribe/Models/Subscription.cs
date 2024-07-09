@@ -1,4 +1,4 @@
-namespace Mira.Features.Shared.Models;
+namespace Mira.Features.SlashCommands.Subscribe.Models;
 
 public class Subscription : IEquatable<Subscription>
 {

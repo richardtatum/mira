@@ -1,16 +1,16 @@
 using Dapper;
 using Mira.Data;
-using Mira.Features.Shared.Models;
+using Mira.Features.SlashCommands.Subscribe.Models;
 
 namespace Mira.Features.SlashCommands.Subscribe.Repositories;
 
 public class QueryRepository(DbContext context)
 {
-    internal async Task<Host[]> GetHostsAsync(ulong? guildId)
+    internal async Task<Host[]> GetHostsAsync(ulong guildId)
     {
         using var connection = context.CreateConnection();
         var results = await connection.QueryAsync<Host>(
-            "SELECT id, url, guild_id FROM host WHERE guild_id = @guildId OR guild_id = @global",
+            "SELECT id, url FROM host WHERE guild_id = @guildId OR guild_id = @global",
         new {
             guildId,
             global = -1
@@ -23,7 +23,7 @@ public class QueryRepository(DbContext context)
     {
         using var connection = context.CreateConnection();
         return await connection.QueryFirstAsync<Host>(
-            "SELECT id, url, guild_id guildId FROM host WHERE id = @id", new
+            "SELECT id, url FROM host WHERE id = @id", new
             {
                 id
             });
