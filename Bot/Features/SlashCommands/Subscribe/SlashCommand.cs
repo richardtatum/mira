@@ -93,10 +93,15 @@ public class SlashCommand(QueryRepository queryRepository, CommandRepository com
 
         await component.ModifyOriginalResponseAsync(message =>
         {
-            message.Content = $"Subscription created! Url: {url}";
-            message.Components = new ComponentBuilder()
-                .WithButton("Watch now!", style: ButtonStyle.Link, url: url)
-                .Build();
+            message.Content = $"Subscription requested for `{url}`";
+            message.Components = new ComponentBuilder().Build();
         });
+        
+        var watchNowButton = new ComponentBuilder()
+            .WithButton("Watch now!", style: ButtonStyle.Link, url: url)
+            .Build();
+        
+        await component.InteractionChannel.SendMessageAsync($"New subscription added for `{url}`! Notifications will be sent to this channel when the stream goes live.",
+            components: watchNowButton);
     }
 }
