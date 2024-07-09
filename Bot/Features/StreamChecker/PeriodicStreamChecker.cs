@@ -27,8 +27,7 @@ public class PeriodicStreamChecker : BackgroundService
         var subscribedHosts = new Dictionary<int, (CancellationTokenSource cancellationTokenSource, string url)>();
         while (await timer.WaitForNextTickAsync(stoppingToken))
         {
-            // TODO: Check for hosts that are subscribed, but no longer in the DB to clear them
-            _logger.LogInformation("[HOST-CHECKER] Checking for hosts.");
+            _logger.LogInformation("[HOST-CHECKER] Checking for new hosts.");
             var hosts = await _query.GetHostsAsync();
             foreach (var host in hosts)
             {
@@ -44,10 +43,19 @@ public class PeriodicStreamChecker : BackgroundService
                 // Create a child of the provided cancellation token
                 var cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(stoppingToken);
                 subscribedHosts[host.Id] = (cancellationSource, host.Url);
-                _ = SubscribeToHostAsync(TimeSpan.FromSeconds(host.PollIntervalSeconds), host, cancellationSource.Token);
+                _ = SubscribeToHostAsync(TimeSpan.FromSeconds(host.PollIntervalSeconds), host,
+                    cancellationSource.Token);
             }
 
-            await CleanupStaleSubscriptionsAsync(subscribedHosts, hosts);
+            // These are hosts that were previously subscribed but have since been removed from the DB
+            var staleHosts = subscribedHosts
+                .Where(subscription =>
+                    !hosts.Select(host => host.Id).Contains(subscription.Key)
+                )
+                .Select(entry => entry.Value)
+                .ToArray();
+
+            await CancelSubscriptionsAsync(staleHosts);
         }
     }
 
@@ -73,29 +81,17 @@ public class PeriodicStreamChecker : BackgroundService
         }
     }
 
-    private async Task CleanupStaleSubscriptionsAsync(
-        Dictionary<int, (CancellationTokenSource cancellationTokenSource, string url)> subscribedHosts, 
-        IEnumerable<Host> databaseHosts)
+    private Task CancelSubscriptionsAsync(
+        IEnumerable<(CancellationTokenSource cancellationSource, string hostUrl)> staleHosts)
     {
-        // These are hosts that were previously subscribed but have since been removed from the DB
-        var removedHosts = subscribedHosts
-            .Where(subscription => 
-                !databaseHosts.Select(host => host.Id).Contains(subscription.Key)
-            )
-            .ToArray();
-
-        var cancellationTasks = removedHosts.Select(entry =>
+        var cancellationTasks = staleHosts.Select(entry =>
         {
-            var (cancellationSource, url) = entry.Value;
-            return CancelSubscriptionAsync(cancellationSource, url);
+            var (cancellationSource, url) = entry;
+            _logger.LogInformation("[HOST-CHECKER][{Host}] Host no longer registered in the database. Cancelling.",
+                url);
+            return cancellationSource.CancelAsync();
         });
 
-        await Task.WhenAll(cancellationTasks);
-    }
-
-    private Task CancelSubscriptionAsync(CancellationTokenSource cancellationSource, string url)
-    {
-        _logger.LogInformation("[HOST-CHECKER][{Host}] Host no longer registered in the database. Cancelling.", url);
-        return cancellationSource.CancelAsync();
+        return Task.WhenAll(cancellationTasks);
     }
 }
