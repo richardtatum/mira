@@ -78,11 +78,11 @@ public class SlashCommand(QueryRepository queryRepository, CommandRepository com
 
         await component.ModifyOriginalResponseAsync(message =>
         {
-            message.Content = $"Request made to unsubscribe from {subscription.Url}";
+            message.Content = $"Request made to unsubscribe from `{subscription.Url}`";
             message.Components = new ComponentBuilder().Build();
         });
 
         await component.InteractionChannel.SendMessageAsync(
-            $"Unsubscribed from {subscription.Url}. Notifications will no longer be sent for this stream.");
+            $"Unsubscribed from `{subscription.Url}`. Notifications will no longer be sent for this stream.");
     }
 }
