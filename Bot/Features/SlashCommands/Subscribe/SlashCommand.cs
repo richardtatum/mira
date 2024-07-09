@@ -67,7 +67,8 @@ public class SlashCommand(QueryRepository queryRepository, CommandRepository com
 
     public async Task RespondAsync(SocketMessageComponent component)
     {
-        if (!int.TryParse(component.Data.CustomId.Split("-").LastOrDefault(), out var subscriptionId))
+        var optionValue = component.Data.CustomId.Split("-").LastOrDefault();
+        if (!int.TryParse(optionValue, out var subscriptionId))
         {
             // Log error
             return;
