@@ -29,7 +29,8 @@ public class SlashCommand(QueryRepository queryRepository, CommandRepository com
         var guildSubscriptions = await queryRepository.GetSubscriptionsAsync(guildId.Value);
         if (guildSubscriptions.Length == 0)
         {
-            await command.RespondAsync("No subscriptions found for this server.", ephemeral: true);
+            await command.RespondAsync("No subscriptions found for this server.");
+            return;
         }
         
         var unsubscribeOptions = guildSubscriptions
@@ -59,7 +60,7 @@ public class SlashCommand(QueryRepository queryRepository, CommandRepository com
             return;
         }
         
-        await component.DeferAsync(ephemeral: true);
+        await component.DeferAsync();
 
         var subscription = await queryRepository.GetSubscriptionAsync(subscriptionId, guildId.Value);
         if (subscription is null)
@@ -77,10 +78,11 @@ public class SlashCommand(QueryRepository queryRepository, CommandRepository com
 
         await component.ModifyOriginalResponseAsync(message =>
         {
-            message.Content = $"Unsubscribed from {subscription.Url}. Notifications will no longer be sent for this stream.";
+            message.Content = $"Request made to unsubscribe from {subscription.Url}";
             message.Components = new ComponentBuilder().Build();
         });
+
+        await component.InteractionChannel.SendMessageAsync(
+            $"Unsubscribed from {subscription.Url}. Notifications will no longer be sent for this stream.");
     }
-
-
 }
