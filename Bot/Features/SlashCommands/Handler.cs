@@ -6,12 +6,12 @@ namespace Mira.Features.SlashCommands;
 public class Handler
 {
     private readonly IEnumerable<ISlashCommand> _commands;
-    private readonly IEnumerable<IInteractable> _interactables;
+    private readonly IEnumerable<ISelectable> _selectables;
 
-    public Handler(IEnumerable<ISlashCommand> commands, IEnumerable<IInteractable> interactables)
+    public Handler(IEnumerable<ISlashCommand> commands, IEnumerable<ISelectable> selectables)
     {
         _commands = commands;
-        _interactables = interactables;
+        _selectables = selectables;
     }
 
     public Task HandleCommandExecutedAsync(SocketSlashCommand command) =>
@@ -20,10 +20,9 @@ public class Handler
             .Select(x => x.RespondAsync(command))
             .FirstOrDefault() ?? Task.CompletedTask;
 
-    public Task HandleInteractionCreatedAsync(SocketInteraction interaction)
-    {
-        return _interactables
-            .Select(x => x.RespondAsync(interaction))
+    public Task HandleSelectMenuExecutedAsync(SocketMessageComponent component) =>
+        _selectables
+            .Where(x => x.HandlesComponent(component))
+            .Select(x => x.RespondAsync(component))
             .FirstOrDefault() ?? Task.CompletedTask;
-    }
 }

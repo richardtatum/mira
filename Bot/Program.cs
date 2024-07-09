@@ -55,7 +55,7 @@ client.Log += message =>
 };
 client.Ready += slashCommandBuilder.OnReadyAsync;
 client.SlashCommandExecuted += slashCommandHandler.HandleCommandExecutedAsync;
-client.InteractionCreated += slashCommandHandler.HandleInteractionCreatedAsync;
+client.SelectMenuExecuted += slashCommandHandler.HandleSelectMenuExecutedAsync;
 
 // Keep connection open
 await Task.Delay(Timeout.Infinite);

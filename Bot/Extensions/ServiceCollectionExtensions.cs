@@ -24,14 +24,14 @@ public static class ServiceCollectionExtensions
             services.Add(new ServiceDescriptor(typeof(ISlashCommand), command, ServiceLifetime.Scoped));
         }
         
-        var interactables = Assembly
+        var selectables = Assembly
             .GetExecutingAssembly()
             .GetTypes()
-            .Where(x => !x.IsAbstract && x.IsClass && x.IsAssignableTo(typeof(IInteractable)));
+            .Where(x => !x.IsAbstract && x.IsClass && x.IsAssignableTo(typeof(ISelectable)));
         
-        foreach (var interactable in interactables)
+        foreach (var selectable in selectables)
         {
-            services.Add(new ServiceDescriptor(typeof(IInteractable), interactable, ServiceLifetime.Scoped));
+            services.Add(new ServiceDescriptor(typeof(ISelectable), selectable, ServiceLifetime.Scoped));
         }
     }
 }
