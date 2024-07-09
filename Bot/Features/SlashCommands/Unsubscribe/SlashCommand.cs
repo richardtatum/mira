@@ -38,7 +38,7 @@ public class SlashCommand(QueryRepository queryRepository, CommandRepository com
             .ToList();
 
         var component = new ComponentBuilder()
-            .WithSelectMenu(CustomId, unsubscribeOptions, "Select the url you wish to unsubscribe from")
+            .WithSelectMenu(CustomId, unsubscribeOptions)
             .Build();
 
         await command.RespondAsync("Select a stream to unsubscribe from:", components: component, ephemeral: true);
