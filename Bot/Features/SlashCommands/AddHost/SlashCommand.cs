@@ -6,7 +6,7 @@ using Mira.Interfaces;
 
 namespace Mira.Features.SlashCommands.AddHost;
 
-public class SlashCommand(BroadcastBoxClient client, CommandRepository commandRepository) : ISlashCommand
+public class SlashCommand(BroadcastBoxClient client, CommandRepository commandRepository, QueryRepository queryRepository) : ISlashCommand
 {
     public string Name => "add-host";
     private const string HostOptionName = "host";
@@ -66,6 +66,13 @@ public class SlashCommand(BroadcastBoxClient client, CommandRepository commandRe
             return;
         }
 
+        var hostExists = await queryRepository.HostExistsAsync(validHostUrl!);
+        if (hostExists)
+        {
+            await command.FollowupAsync($"Provided URL `{validHostUrl}` already exists.");
+            return;
+        }
+
         var validHost = await client.IsVerifiedBroadcastBoxHostAsync(validHostUrl!);
         if (!validHost)
         {
@@ -75,7 +82,7 @@ public class SlashCommand(BroadcastBoxClient client, CommandRepository commandRe
         }
 
         await commandRepository.AddHostAsync(validHostUrl!, interval, guildId.Value);
-        await command.FollowupAsync($"Success! Added host `{validHostUrl} with a polling interval of {interval} seconds.`");
+        await command.FollowupAsync($"Success! Added host `{validHostUrl}` with a polling interval of {interval} seconds.");
     }
     
     private static bool IsValidUrl(string url, out string? validUrl)
