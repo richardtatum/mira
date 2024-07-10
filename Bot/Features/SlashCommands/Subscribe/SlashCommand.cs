@@ -13,7 +13,7 @@ public class SlashCommand(QueryRepository queryRepository, CommandRepository com
     private const string CustomId = "subscribe";
     private const string StreamKeyOptionName = "streamkey";
 
-    public Task<SlashCommandProperties> BuildCommandAsync() => Task.FromResult(
+    public ApplicationCommandProperties BuildCommand() =>
         new SlashCommandBuilder()
             .WithName(Name)
             .WithDescription("Be notified when a user begins streaming.")
@@ -24,7 +24,7 @@ public class SlashCommand(QueryRepository queryRepository, CommandRepository com
                     .WithRequired(true)
                     .WithType(ApplicationCommandOptionType.String)
             )
-            .Build());
+            .Build();
 
     public async Task RespondAsync(SocketSlashCommand command)
     {
@@ -34,7 +34,7 @@ public class SlashCommand(QueryRepository queryRepository, CommandRepository com
             // Return failure message
             return;
         }
-        
+
         var channelId = command.ChannelId;
         var guildId = command.GuildId;
         if (channelId is null || guildId is null)
@@ -49,21 +49,24 @@ public class SlashCommand(QueryRepository queryRepository, CommandRepository com
             Channel = channelId,
             CreatedBy = command.User.Id
         };
-        
+
         var subscriptionId = await commandRepository.AddSubscription(subscription);
         var hosts = await queryRepository.GetHostsAsync(guildId.Value);
         var hostOptions = hosts
-            .Select(host => new SelectMenuOptionBuilder(host.Url, host.Id.ToString(), $"Create notification for {host.Url}/{streamKey}"))
+            .Select(host =>
+                new SelectMenuOptionBuilder(host.Url, host.Id.ToString(),
+                    $"Create notification for {host.Url}/{streamKey}"))
             .ToList();
 
         var component = new ComponentBuilder()
             .WithSelectMenu($"{CustomId}-{subscriptionId}", hostOptions, $"Where will {streamKey} stream?")
             .Build();
-        
+
         await command.RespondAsync("Select a host:", components: component, ephemeral: true);
     }
 
-    public bool HandlesComponent(SocketMessageComponent component) => component.Data.CustomId.Split("-").FirstOrDefault() == CustomId;
+    public bool HandlesComponent(SocketMessageComponent component) =>
+        component.Data.CustomId.Split("-").FirstOrDefault() == CustomId;
 
     public async Task RespondAsync(SocketMessageComponent component)
     {
@@ -80,7 +83,7 @@ public class SlashCommand(QueryRepository queryRepository, CommandRepository com
         {
             return;
         }
-        
+
         if (!int.TryParse(component.Data.Values.FirstOrDefault(), out var hostId))
         {
             return;
@@ -96,12 +99,13 @@ public class SlashCommand(QueryRepository queryRepository, CommandRepository com
             message.Content = $"Subscription requested for `{url}`";
             message.Components = new ComponentBuilder().Build();
         });
-        
+
         var watchNowButton = new ComponentBuilder()
             .WithButton("Watch now!", style: ButtonStyle.Link, url: url)
             .Build();
-        
-        await component.InteractionChannel.SendMessageAsync($"New subscription added for `{url}`! Notifications will be sent to this channel when the stream goes live.",
+
+        await component.InteractionChannel.SendMessageAsync(
+            $"New subscription added for `{url}`! Notifications will be sent to this channel when the stream goes live.",
             components: watchNowButton);
     }
 }

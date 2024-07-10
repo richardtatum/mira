@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Discord;
 using Discord.Net;
 using Discord.WebSocket;
 using Mira.Interfaces;
@@ -20,14 +21,15 @@ public class Builder
     {
         try
         {
-            foreach (var command in _commands)
-            {
-                var commandProperties= await command.BuildCommandAsync();
-                await _client.CreateGlobalApplicationCommandAsync(commandProperties);
-            }
+            var commandProperties = _commands
+                .Select(command => command.BuildCommand())
+                .ToArray();
+
+            await _client.BulkOverwriteGlobalApplicationCommandsAsync(commandProperties);
         }
         catch (HttpException ex)
         {
+            // TODO: Update to use logger
             var json = JsonSerializer.Serialize(ex.Errors, new JsonSerializerOptions
             {
                 WriteIndented = true

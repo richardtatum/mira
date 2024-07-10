@@ -6,6 +6,6 @@ namespace Mira.Interfaces;
 public interface ISlashCommand
 {
     string Name { get; }
-    Task<SlashCommandProperties> BuildCommandAsync();
+    ApplicationCommandProperties BuildCommand();
     Task RespondAsync(SocketSlashCommand command);
 }

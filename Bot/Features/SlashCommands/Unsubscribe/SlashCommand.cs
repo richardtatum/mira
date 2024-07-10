@@ -10,12 +10,11 @@ public class SlashCommand(QueryRepository queryRepository, CommandRepository com
     public string Name => "unsubscribe";
     private const string CustomId = "unsubscribe";
 
-    public Task<SlashCommandProperties> BuildCommandAsync() => Task.FromResult(
+    public ApplicationCommandProperties BuildCommand() => 
         new SlashCommandBuilder()
             .WithName(Name)
-            .WithDescription("Select the stream you no longer wish to subscribe to.")
-            .Build()
-    );
+            .WithDescription("Remove a stream notification.")
+            .Build();
 
     public async Task RespondAsync(SocketSlashCommand command)
     {
