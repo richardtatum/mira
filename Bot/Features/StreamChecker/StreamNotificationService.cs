@@ -41,15 +41,15 @@ public class StreamNotificationService
         var subscribedLiveStreams = subscriptions
             .Where(subscription => liveStreamKeys.Contains(subscription.StreamKey))
             .ToArray();
+
         var subscribedOfflineStreams = subscriptions
             .Except(subscribedLiveStreams)
             .ToArray();
         
-        // TODO: Better handle these null Ids, maybe a DTO?
-        // These are streams recorded as being live right now in the system
-        var liveStreams = await _query.GetLiveStreamsAsync(subscriptions.Select(x => x.Id));
+        // These are streams marked as live in the database
+        var recordedLiveStreams = await _query.GetLiveStreamsAsync(subscriptions.Select(x => x.Id));
 
-        var newOfflineStreams = liveStreams
+        var newOfflineStreams = recordedLiveStreams
             .Where(stream => subscribedOfflineStreams.Select(x => x.Id).Contains(stream.SubscriptionId))
             .Select(stream => new StreamRecord
             {
@@ -62,7 +62,7 @@ public class StreamNotificationService
             .ToArray();
         
         var newLiveStreams = subscribedLiveStreams
-            .Where(subscription => !liveStreams.Select(x => x.SubscriptionId).Contains(subscription.Id))
+            .Where(subscription => !recordedLiveStreams.Select(x => x.SubscriptionId).Contains(subscription.Id))
             .Select(subscription => new StreamRecord
             {
                 SubscriptionId = subscription.Id,
