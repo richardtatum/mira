@@ -11,19 +11,20 @@ public class PeriodicStreamChecker(
     ILogger<PeriodicStreamChecker> logger)
     : BackgroundService
 {
+    // TODO: Load from IOptions
+    private TimeSpan HostPollingInterval => TimeSpan.FromSeconds(60);
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(60));
+        using var timer = new PeriodicTimer(HostPollingInterval);
 
-        // TODO: Consider the fact that removed hosts could be replaced by a different host with the same Id, causing problems with running subscriptions
-        var subscribedHosts = new Dictionary<int, (CancellationTokenSource cancellationTokenSource, string url)>();
+        var subscribedHosts = new Dictionary<string, CancellationTokenSource>();
         while (await timer.WaitForNextTickAsync(stoppingToken))
         {
             logger.LogInformation("[HOST-CHECKER] Checking for new hosts.");
             var hosts = await query.GetHostsAsync();
             foreach (var host in hosts)
             {
-                if (subscribedHosts.ContainsKey(host.Id))
+                if (subscribedHosts.ContainsKey(host.Url))
                 {
                     continue;
                 }
@@ -34,7 +35,7 @@ public class PeriodicStreamChecker(
 
                 // Create a child of the provided cancellation token
                 var cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(stoppingToken);
-                subscribedHosts[host.Id] = (cancellationSource, host.Url);
+                subscribedHosts[host.Url] = cancellationSource;
                 _ = SubscribeToHostAsync(TimeSpan.FromSeconds(host.PollIntervalSeconds), host,
                     cancellationSource.Token);
             }
@@ -42,9 +43,9 @@ public class PeriodicStreamChecker(
             // These are hosts that were previously subscribed but have since been removed from the DB
             var staleHosts = subscribedHosts
                 .Where(subscription =>
-                    !hosts.Select(host => host.Id).Contains(subscription.Key)
+                    !hosts.Select(host => host.Url).Contains(subscription.Key)
                 )
-                .Select(entry => entry.Value)
+                .Select(entry => (entry.Key, entry.Value))
                 .ToArray();
 
             await CancelSubscriptionsAsync(staleHosts);
@@ -59,7 +60,7 @@ public class PeriodicStreamChecker(
         using var timer = new PeriodicTimer(period);
         while (await timer.WaitForNextTickAsync(stoppingToken))
         {
-            var subscriptions = await query.GetSubscriptionsAsync(host.Id);
+            var subscriptions = await query.GetSubscriptionsAsync(host.Url);
             if (subscriptions.Length == 0)
             {
                 logger.LogInformation("[KEY-CHECKER][{Host}] No key subscriptions found. Skipping.", host.Url);
@@ -74,11 +75,11 @@ public class PeriodicStreamChecker(
     }
 
     private Task CancelSubscriptionsAsync(
-        IEnumerable<(CancellationTokenSource cancellationSource, string hostUrl)> staleHosts)
+        IEnumerable<(string hostUrl, CancellationTokenSource cancellationSource)> staleHosts)
     {
         var cancellationTasks = staleHosts.Select(entry =>
         {
-            var (cancellationSource, url) = entry;
+            var (url, cancellationSource) = entry;
             logger.LogInformation("[HOST-CHECKER][{Host}] Host no longer registered in the database. Cancelling.",
                 url);
             return cancellationSource.CancelAsync();

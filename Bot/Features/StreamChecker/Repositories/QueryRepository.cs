@@ -41,20 +41,24 @@ public class QueryRepository(DbContext context)
     {
         using var connection = context.CreateConnection();
         var results = await connection.QueryAsync<Host>(
-            "SELECT id, url, poll_interval_seconds pollIntervalSeconds, guild_id guildId FROM host");
+            @"SELECT url, MIN(poll_interval_seconds) pollIntervalSeconds
+                FROM host
+                GROUP BY url"
+        );
 
         return results.ToArray();
     }
 
-    internal async Task<Subscription[]> GetSubscriptionsAsync(int hostId)
+    internal async Task<Subscription[]> GetSubscriptionsAsync(string hostUrl)
     {
         using var connection = context.CreateConnection();
         var results = await connection.QueryAsync<Subscription>(
-            @"SELECT id, stream_key streamKey, host_id hostId, channel, created_by createdBy 
-                FROM subscription
-                WHERE host_id = @hostId", new
+            @"SELECT s.id, s.stream_key streamKey, s.channel, s.created_by createdBy 
+                FROM subscription s
+                INNER JOIN host h ON s.host_id = h.id
+                WHERE h.url = @hostUrl", new
         {
-            hostId
+            hostUrl
         });
 
         return results.ToArray();
