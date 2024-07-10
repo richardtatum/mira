@@ -63,7 +63,7 @@ public class PeriodicStreamChecker(
             if (subscriptions.Length == 0)
             {
                 logger.LogInformation("[KEY-CHECKER][{Host}] No key subscriptions found. Skipping.", host.Url);
-                return;
+                continue;
             }
 
             logger.LogInformation(
