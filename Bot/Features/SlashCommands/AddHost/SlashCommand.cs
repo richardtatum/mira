@@ -56,26 +56,26 @@ public class SlashCommand(BroadcastBoxClient client, CommandRepository commandRe
             // Return failure message
             return;
         }
+        
+        await command.DeferAsync();
 
         var isValidUrl = IsValidUrl(host, out var validHostUrl);
         if (!isValidUrl)
         {
-            await command.RespondAsync($"Provided URL {host} is invalid. Please check and try again.");
+            await command.FollowupAsync($"Provided URL `{host}` is invalid. Please check and try again.");
             return;
         }
-
-        await command.DeferAsync();
 
         var validHost = await client.IsVerifiedBroadcastBoxHostAsync(validHostUrl!);
         if (!validHost)
         {
-            await command.RespondAsync(
-                $"Failed to add host. Received a non-success response code from {validHostUrl}/api/status. Please check and try again.");
+            await command.FollowupAsync(
+            $"Failed to add host. Received a non-success response code from `{validHostUrl}/api/status`. Please check and try again.");
             return;
         }
 
         await commandRepository.AddHostAsync(validHostUrl!, interval, guildId.Value);
-        await command.RespondAsync($"Success! Added host {validHostUrl}");
+        await command.FollowupAsync($"Success! Added host `{validHostUrl} with a polling interval of {interval} seconds.`");
     }
     
     private static bool IsValidUrl(string url, out string? validUrl)
