@@ -36,8 +36,7 @@ public class PeriodicStreamChecker(
                 // Create a child of the provided cancellation token
                 var cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(stoppingToken);
                 subscribedHosts[host.Url] = cancellationSource;
-                _ = SubscribeToHostAsync(TimeSpan.FromSeconds(host.PollIntervalSeconds), host,
-                    cancellationSource.Token);
+                _ = SubscribeToHostAsync(host, cancellationSource.Token);
             }
 
             // These are hosts that were previously subscribed but have since been removed from the DB
@@ -52,12 +51,9 @@ public class PeriodicStreamChecker(
         }
     }
 
-    private async Task SubscribeToHostAsync(TimeSpan period, Host host, CancellationToken stoppingToken)
+    private async Task SubscribeToHostAsync(Host host, CancellationToken stoppingToken)
     {
-        // Shortest interval period is 30 seconds
-        period = period.TotalSeconds < 30 ? TimeSpan.FromSeconds(30) : period;
-
-        using var timer = new PeriodicTimer(period);
+        using var timer = new PeriodicTimer(host.PollInterval);
         while (await timer.WaitForNextTickAsync(stoppingToken))
         {
             var subscriptions = await query.GetSubscriptionsAsync(host.Url);
