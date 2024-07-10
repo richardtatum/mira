@@ -4,30 +4,21 @@ using Mira.Features.StreamChecker.Models;
 
 namespace Mira.Features.StreamChecker;
 
-public class BroadcastBoxClient
+public class BroadcastBoxClient(IHttpClientFactory httpClientFactory, ILogger<BroadcastBoxClient> logger)
 {
-    private readonly IHttpClientFactory _httpClientFactory;
-    private readonly ILogger<BroadcastBoxClient> _logger;
-
-    public BroadcastBoxClient(IHttpClientFactory httpClientFactory, ILogger<BroadcastBoxClient> logger)
+    public async Task<IEnumerable<KeyStatus>> GetStreamsAsync(string hostUrl)
     {
-        _httpClientFactory = httpClientFactory;
-        _logger = logger;
-    }
-
-    public async Task<IEnumerable<KeyStatus>> GetStreamsAsync(string host)
-    {
-        if (string.IsNullOrWhiteSpace(host))
+        if (string.IsNullOrWhiteSpace(hostUrl))
         {
             return [];
         }
 
-        var client = _httpClientFactory.CreateClient(host);
+        var client = httpClientFactory.CreateClient(hostUrl);
         
-        var result = await client.GetAsync($"{host}/api/status");
+        var result = await client.GetAsync($"{hostUrl}/api/status");
         if (!result.IsSuccessStatusCode)
         {
-            _logger.LogError("[BROADCASTBOX-CLIENT] Failed to make get request to {Host}/api/status. Status code: {Status}", host, result.StatusCode);
+            logger.LogError("[BROADCASTBOX-CLIENT] Failed to make get request to {Host}/api/status. Status code: {Status}", hostUrl, result.StatusCode);
             return [];
         }
 
@@ -35,7 +26,7 @@ public class BroadcastBoxClient
         if (statuses is null)
         {
             var rawResponse = await result.Content.ReadAsStringAsync();
-            _logger.LogError("[BROADCASTBOX-CLIENT] Failed to extract KeyStatus models from JSON. Raw response: {Response}", rawResponse);
+            logger.LogError("[BROADCASTBOX-CLIENT] Failed to extract KeyStatus models from JSON. Raw response: {Response}", rawResponse);
         }
 
         return statuses ?? [];
