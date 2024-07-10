@@ -6,7 +6,7 @@ using Microsoft.Extensions.Hosting;
 using Mira.Data;
 using Mira.Extensions;
 using Mira.Features.SlashCommands;
-using Mira.Features.SlashCommands.Notify.Repositories;
+using Mira.Features.SlashCommands.Subscribe.Repositories;
 using Mira.Features.StreamChecker;
 
 var host = await Host.CreateDefaultBuilder()
@@ -29,6 +29,8 @@ var host = await Host.CreateDefaultBuilder()
         services.AddScoped<Mira.Features.StreamChecker.Repositories.CommandRepository>();
         services.AddScoped<Mira.Features.SlashCommands.Unsubscribe.Repositories.QueryRepository>();
         services.AddScoped<Mira.Features.SlashCommands.Unsubscribe.Repositories.CommandRepository>();
+        services.AddScoped<Mira.Features.SlashCommands.AddHost.Repositories.CommandRepository>();
+        services.TryAddScoped<Mira.Features.SlashCommands.AddHost.BroadcastBoxClient>();
     })
     .StartAsync();
 
@@ -40,7 +42,7 @@ var host = await Host.CreateDefaultBuilder()
 }
 
 var client = host.Services.GetRequiredService<DiscordSocketClient>();
-var slashCommandBuilder = host.Services.GetRequiredService<Mira.Features.SlashCommands.Builder>();
+var slashCommandBuilder = host.Services.GetRequiredService<Builder>();
 var slashCommandHandler = host.Services.GetRequiredService<Handler>();
 
 // var token = Environment.GetEnvironmentVariable("DISCORD_TOKEN");
