@@ -13,7 +13,7 @@ public class QueryRepository(DbContext context)
         var results = await connection.QueryAsync<StreamRecord>(
             @"SELECT id, subscription_id subscriptionId, status, start_time startTime, end_time endTime
                 FROM stream
-                WHERE subscription_id IN (@subscriptionIds) AND status = @live", new
+                WHERE subscription_id IN @subscriptionIds AND status = @live", new
             {
                 subscriptionIds,
                 live = StreamStatus.Live
