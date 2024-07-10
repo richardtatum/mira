@@ -13,10 +13,9 @@ public class QueryRepository(DbContext context)
             @"SELECT s.id, h.url host, s.stream_key streamKey 
                 FROM subscription s
                 INNER JOIN host h ON s.host_id = h.id
-                WHERE h.guild_id = @guildId OR h.guild_id = @global", new
+                WHERE h.guild_id = @guildId", new
             {
-                guildId,
-                global = -1
+                guildId
             });
 
         return results.ToArray();
@@ -30,11 +29,10 @@ public class QueryRepository(DbContext context)
                 FROM subscription s
                 INNER JOIN host h ON s.host_id = h.id
                 WHERE s.id = @subscriptionId
-                AND h.guild_id = @guildId OR h.guild_id = @global", new
+                AND h.guild_id = @guildId", new
             {
                 subscriptionId,
-                guildId,
-                global = -1
+                guildId
             });
     }
 }

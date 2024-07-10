@@ -50,8 +50,17 @@ public class SlashCommand(QueryRepository queryRepository, CommandRepository com
             CreatedBy = command.User.Id
         };
 
+        await command.DeferAsync(ephemeral: true);
+
         var subscriptionId = await commandRepository.AddSubscription(subscription);
         var hosts = await queryRepository.GetHostsAsync(guildId.Value);
+        if (hosts.Length == 0)
+        {
+            await command.FollowupAsync(
+                "No hosts found! Please use the `/add-host` command to add a valid BroadcastBox host before subscribing.");
+            return;
+        }
+
         var hostOptions = hosts
             .Select(host =>
                 new SelectMenuOptionBuilder(host.Url, host.Id.ToString(),
@@ -62,7 +71,7 @@ public class SlashCommand(QueryRepository queryRepository, CommandRepository com
             .WithSelectMenu($"{CustomId}-{subscriptionId}", hostOptions, $"Where will {streamKey} stream?")
             .Build();
 
-        await command.RespondAsync("Select a host:", components: component, ephemeral: true);
+        await command.FollowupAsync("Select a host:", components: component);
     }
 
     public bool HandlesComponent(SocketMessageComponent component) =>

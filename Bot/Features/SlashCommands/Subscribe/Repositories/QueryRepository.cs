@@ -10,10 +10,9 @@ public class QueryRepository(DbContext context)
     {
         using var connection = context.CreateConnection();
         var results = await connection.QueryAsync<Host>(
-            "SELECT id, url FROM host WHERE guild_id = @guildId OR guild_id = @global",
+            "SELECT id, url FROM host WHERE guild_id = @guildId",
         new {
             guildId,
-            global = -1
         });
 
         return results.ToArray();

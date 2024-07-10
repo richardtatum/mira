@@ -24,7 +24,3 @@ CREATE TABLE IF NOT EXISTS stream (
     FOREIGN KEY (subscription_id) REFERENCES subscription(id),
     UNIQUE (subscription_id)
 );
-
--- We use -1 here to denote available to all guilds. Traditionally I would have set it as null
--- however sqlite UNIQUE() constraint does not support uniqueness via null values
-INSERT OR IGNORE INTO host(url, guild_id) VALUES("https://b.siobud.com", "-1");
