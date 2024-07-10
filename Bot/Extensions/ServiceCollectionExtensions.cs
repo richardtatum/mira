@@ -21,7 +21,7 @@ public static class ServiceCollectionExtensions
 
         foreach (var command in commands)
         {
-            services.Add(new ServiceDescriptor(typeof(ISlashCommand), command, ServiceLifetime.Scoped));
+            services.TryAdd(new ServiceDescriptor(typeof(ISlashCommand), command, ServiceLifetime.Scoped));
         }
         
         var selectables = Assembly
@@ -31,7 +31,7 @@ public static class ServiceCollectionExtensions
         
         foreach (var selectable in selectables)
         {
-            services.Add(new ServiceDescriptor(typeof(ISelectable), selectable, ServiceLifetime.Scoped));
+            services.TryAdd(new ServiceDescriptor(typeof(ISelectable), selectable, ServiceLifetime.Scoped));
         }
     }
 }
