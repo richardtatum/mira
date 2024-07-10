@@ -104,7 +104,7 @@ public class SlashCommand(BroadcastBoxClient client, CommandRepository commandRe
             return false;
         }
 
-        validUrl = url;
+        validUrl = uri.GetLeftPart(UriPartial.Authority);
         return true;
     }
 }
