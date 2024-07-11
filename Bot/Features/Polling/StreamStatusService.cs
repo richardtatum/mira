@@ -1,6 +1,7 @@
 using Discord;
 using Discord.WebSocket;
 using Microsoft.Extensions.Logging;
+using Mira.Features.Messaging;
 using Mira.Features.Polling.Models;
 using Mira.Features.Polling.Repositories;
 using Host = Mira.Features.Polling.Models.Host;
@@ -26,41 +27,37 @@ public class StreamStatusService(
         var subscriptionIds = subscriptions.Select(x => x.Id);
         var existingLiveStreams = await query.GetLiveStreamsAsync(subscriptionIds);
        
-        var (live, offline) = await GetCurrentStatusAsync(host, subscriptions);
-        var (newLiveStreams, newOfflineStreams) = GetStatusChanges(live, offline, existingLiveStreams);
+        var currentStreams = await GetStreamSummariesAsync(host, subscriptions);
+        var records = GenerateStreamRecords(currentStreams, existingLiveStreams);
 
-        // Update records in DB
-        var updateTasks = newOfflineStreams
-            .Union(newLiveStreams)
-            .Select(command.UpsertStreamRecord);
+        var upsertTasks = records.Select(command.UpsertStreamRecord);
+        var messageTasks = records.Select(stream => SendStatusMessage(stream.SubscriptionId, stream.Status));
 
-        await Task.WhenAll(updateTasks);
-
-        // Send Messages
-        var messageTasks = newLiveStreams.Union(newOfflineStreams)
-            .Select(stream => SendStatusMessage(stream.SubscriptionId, stream.Status));
-
-        await Task.WhenAll(messageTasks);
+        await Task.WhenAll(upsertTasks.Union(messageTasks));
     }
 
-    internal (StreamRecord[] live, StreamRecord[] offline) GetStatusChanges(
-        IEnumerable<Subscription> liveStreams, IEnumerable<Subscription> offlineStreams, IEnumerable<StreamRecord> existingLiveStreams)
+    internal StreamRecord[] GenerateStreamRecords(
+        IEnumerable<StreamSummary> currentStreams, IEnumerable<StreamRecord> existingLiveStreams)
     {
-        var liveSubscriptions = liveStreams as Subscription[] ?? liveStreams.ToArray();
-        var offlineSubscriptions = offlineStreams as Subscription[] ?? offlineStreams.ToArray();
+        var liveStreams = currentStreams.Where(stream => stream.IsLive).ToArray();
+        var offlineStreams = currentStreams.Where(stream => !stream.IsLive).ToArray();
         
-        var newLiveStreams = liveSubscriptions
-            .Where(subscription => !existingLiveStreams.Select(x => x.SubscriptionId).Contains(subscription.Id))
-            .Select(subscription => new StreamRecord
+        var ongoingStreams = existingLiveStreams
+            .Where(existingStream => liveStreams.Select(stream => stream.SubscriptionId).Contains(existingStream.SubscriptionId))
+            .ToArray();
+        
+        var newLiveStreams = liveStreams
+            .Where(stream => !existingLiveStreams.Select(x => x.SubscriptionId).Contains(stream.SubscriptionId))
+            .Select(stream => new StreamRecord
             {
-                SubscriptionId = subscription.Id,
+                SubscriptionId = stream.SubscriptionId,
                 Status = StreamStatus.Live,
                 StartTime = DateTime.UtcNow
             })
             .ToArray();
         
         var newOfflineStreams = existingLiveStreams
-            .Where(stream => offlineSubscriptions.Select(x => x.Id).Contains(stream.SubscriptionId))
+            .Where(stream => offlineStreams.Select(stream => stream.SubscriptionId).Contains(stream.SubscriptionId))
             .Select(stream => new StreamRecord
             {
                 Id = stream.Id,
@@ -71,30 +68,35 @@ public class StreamStatusService(
             })
             .ToArray();
 
-        return (newLiveStreams, newOfflineStreams);
+        return ongoingStreams
+            .Union(newLiveStreams)
+            .Union(newOfflineStreams)
+            .ToArray();
     }
     
-    internal async Task<(Subscription[] live, Subscription[] offline)> GetCurrentStatusAsync(Host host,
-        Subscription[] subscriptions)
+    internal async Task<StreamSummary[]> GetStreamSummariesAsync(Host host, Subscription[] subscriptions)
     {
         if (subscriptions.Length == 0)
         {
             logger.LogInformation("[NOTIFICATION-SERVICE][{Host}] No subscriptions provided. Skipping.", host.Url);
-            return ([], []);
+            return [];
         }
         
         var streams = await client.GetStreamsAsync(host.Url);
-        var liveStreamKeys = streams.Where(stream => stream.IsLive).Select(stream => stream.StreamKey);
-
-        var subscribedLiveStreams = subscriptions
-            .Where(subscription => liveStreamKeys.Contains(subscription.StreamKey))
+        return subscriptions
+            .Select(subscription =>
+            {
+                var stream = streams.FirstOrDefault(stream => stream.StreamKey == subscription.StreamKey);
+                return new StreamSummary
+                {
+                    SubscriptionId = subscription.Id,
+                    StreamKey = subscription.StreamKey,
+                    Host = host.Url,
+                    Viewers = stream?.CurrentViewers ?? 0,
+                    IsLive = stream?.IsLive ?? false
+                };
+            })
             .ToArray();
-
-        var subscribedOfflineStreams = subscriptions
-            .Except(subscribedLiveStreams)
-            .ToArray();
-
-        return (subscribedLiveStreams, subscribedOfflineStreams);
     }
 
     // Pass the message to this, some abstraction of a component perhaps?
