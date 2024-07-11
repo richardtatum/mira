@@ -11,6 +11,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<CommandRepository>();
         services.AddScoped<QueryRepository>();
         services.AddScoped<ISlashCommand, SlashCommand>();
+        services.AddScoped<ISelectable, SlashCommand>();
 
         return services;
     }
