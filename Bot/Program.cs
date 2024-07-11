@@ -27,10 +27,6 @@ var host = await Host.CreateDefaultBuilder()
         services.TryAddScoped<CommandRepository>();
         services.AddScoped<Mira.Features.StreamChecker.Repositories.QueryRepository>();
         services.AddScoped<Mira.Features.StreamChecker.Repositories.CommandRepository>();
-        services.AddScoped<Mira.Features.SlashCommands.Unsubscribe.Repositories.QueryRepository>();
-        services.AddScoped<Mira.Features.SlashCommands.Unsubscribe.Repositories.CommandRepository>();
-        services.AddScoped<Mira.Features.SlashCommands.AddHost.Repositories.CommandRepository>();
-        services.TryAddScoped<Mira.Features.SlashCommands.AddHost.BroadcastBoxClient>();
     })
     .StartAsync();
 
