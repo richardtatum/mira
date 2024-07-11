@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS stream (
     id INTEGER PRIMARY KEY NOT NULL,
     subscription_id INTEGER NOT NULL,
     status INTEGER NOT NULL,
+    viewer_count INTEGER DEFAULT 0 NOT NULL,
     start_time TEXT NOT NULL,
     end_time TEXT NULL,
     FOREIGN KEY (subscription_id) REFERENCES subscription(id),
