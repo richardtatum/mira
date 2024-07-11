@@ -1,4 +1,4 @@
-namespace Mira.Features.Polling.Models;
+namespace Mira.Features.Shared;
 
 public enum StreamStatus
 {

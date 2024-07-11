@@ -1,6 +1,7 @@
 using Dapper;
 using Mira.Data;
 using Mira.Features.Polling.Models;
+using Mira.Features.Shared;
 
 namespace Mira.Features.Polling.Repositories;
 
@@ -22,20 +23,7 @@ public class QueryRepository(DbContext context)
         return results.ToArray();
     }
 
-    internal async Task<StreamSummary> GetStreamSummaryAsync(int subscriptionId)
-    {
-        using var connection = context.CreateConnection();
 
-        return await connection.QueryFirstAsync<StreamSummary>(
-            @"SELECT s.subscription_id subscriptionId, h.url host, n.stream_key streamKey, n.channel, s.start_time startTime, s.end_time endTime
-                FROM subscription n
-                INNER JOIN host h ON h.id = n.host_id
-                INNER JOIN stream s ON s.subscription_id = n.id
-                WHERE n.id = @subscriptionId", new
-            {
-                subscriptionId
-            });
-    }
 
     internal async Task<Host[]> GetHostsAsync()
     {
@@ -53,7 +41,7 @@ public class QueryRepository(DbContext context)
     {
         using var connection = context.CreateConnection();
         var results = await connection.QueryAsync<Subscription>(
-            @"SELECT s.id, s.stream_key streamKey, s.channel, s.created_by createdBy 
+            @"SELECT s.id, s.stream_key streamKey, s.channel 
                 FROM subscription s
                 INNER JOIN host h ON s.host_id = h.id
                 WHERE h.url = @hostUrl", new
