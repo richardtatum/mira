@@ -7,7 +7,7 @@ public static class ServiceCollectionExtensions
 {
     public static void AddPollingService(this IServiceCollection services)
     {
-        services.AddHostedService<PollingService>(); // TODO: Set this to ignore failures
+        services.AddSingleton<PollingService>(); // TODO: Set this to ignore failures
         services.AddScoped<StreamStatusService>();
         services.AddScoped<BroadcastBoxClient>();
         services.AddScoped<QueryRepository>();

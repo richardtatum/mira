@@ -31,6 +31,7 @@ var host = await Host.CreateDefaultBuilder()
 }
 
 var client = host.Services.GetRequiredService<DiscordSocketClient>();
+var pollingService = host.Services.GetRequiredService<PollingService>();
 var slashCommandBuilder = host.Services.GetRequiredService<Builder>();
 var slashCommandHandler = host.Services.GetRequiredService<Handler>();
 
@@ -47,6 +48,7 @@ client.Log += message =>
     return Task.CompletedTask;
 };
 client.Ready += slashCommandBuilder.OnReadyAsync;
+client.Ready += pollingService.StartPolling;
 client.SlashCommandExecuted += slashCommandHandler.HandleCommandExecutedAsync;
 client.SelectMenuExecuted += slashCommandHandler.HandleSelectMenuExecutedAsync;
 

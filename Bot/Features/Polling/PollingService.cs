@@ -14,6 +14,12 @@ public class PollingService(
     // TODO: Load from IOptions
     private TimeSpan HostPollingInterval => TimeSpan.FromSeconds(60);
 
+    public Task StartPolling()
+    {
+        _ = ExecuteAsync(default);
+        return Task.CompletedTask;
+    }
+
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         using var timer = new PeriodicTimer(HostPollingInterval);
