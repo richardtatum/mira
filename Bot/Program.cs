@@ -4,29 +4,22 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Mira.Data;
-using Mira.Extensions;
+using Mira.Features.Messaging;
+using Mira.Features.Polling;
 using Mira.Features.SlashCommands;
-using Mira.Features.SlashCommands.Subscribe.Repositories;
-using Mira.Features.StreamChecker;
 
 var host = await Host.CreateDefaultBuilder()
-    .ConfigureServices((host, services) =>
+    .ConfigureServices((_, services) =>
     {
         // Add services here.
         services.TryAddScoped<DiscordSocketClient>();
         services.AddSingleton<DbContext>();
-        services.AddSlashCommands();
 
         services.AddHttpClient();
+        services.AddSlashCommands();
+        services.AddPollingService();
+        services.AddMessagingService();
 
-        // THESE NEED TO BE EXTENSIONS OR LOADED DYNAMICALLY
-        services.AddHostedService<PeriodicStreamChecker>(); // TODO: Set this to ignore failures
-        services.AddScoped<StreamNotificationService>();
-        services.TryAddScoped<BroadcastBoxClient>();
-        services.TryAddScoped<QueryRepository>();
-        services.TryAddScoped<CommandRepository>();
-        services.AddScoped<Mira.Features.StreamChecker.Repositories.QueryRepository>();
-        services.AddScoped<Mira.Features.StreamChecker.Repositories.CommandRepository>();
     })
     .StartAsync();
 
