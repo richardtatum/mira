@@ -2,7 +2,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Mira.Features.SlashCommands.AddHost;
 
-public class BroadcastBoxClient(IHttpClientFactory httpClientFactory, ILogger<StreamChecker.BroadcastBoxClient> logger)
+public class BroadcastBoxClient(IHttpClientFactory httpClientFactory, ILogger<BroadcastBoxClient> logger)
 {
     public async Task<bool> IsVerifiedBroadcastBoxHostAsync(string hostUrl)
     {
