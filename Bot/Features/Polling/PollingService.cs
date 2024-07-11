@@ -13,12 +13,13 @@ public class PollingService(
 {
     // TODO: Load from IOptions
     private TimeSpan HostPollingInterval => TimeSpan.FromSeconds(60);
+
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         using var timer = new PeriodicTimer(HostPollingInterval);
 
         var subscribedHosts = new Dictionary<string, CancellationTokenSource>();
-        while (await timer.WaitForNextTickAsync(stoppingToken))
+        do
         {
             logger.LogInformation("[HOST-CHECKER] Checking for new hosts.");
             var hosts = await query.GetHostsAsync();
@@ -48,13 +49,13 @@ public class PollingService(
                 .ToArray();
 
             await CancelSubscriptionsAsync(staleHosts);
-        }
+        } while (await timer.WaitForNextTickAsync(stoppingToken));
     }
 
     private async Task SubscribeToHostAsync(Host host, CancellationToken stoppingToken)
     {
         using var timer = new PeriodicTimer(host.PollInterval);
-        while (await timer.WaitForNextTickAsync(stoppingToken))
+        do
         {
             var subscriptions = await query.GetSubscriptionsAsync(host.Url);
             if (subscriptions.Length == 0)
@@ -67,7 +68,7 @@ public class PollingService(
                 "[KEY-CHECKER][{Host}] {Subscriptions} key subscription(s) found. Checking for stream updates.",
                 host.Url, subscriptions.Length);
             await service.UpdateStreamsAsync(host, subscriptions);
-        }
+        } while (await timer.WaitForNextTickAsync(stoppingToken));
     }
 
     private Task CancelSubscriptionsAsync(
