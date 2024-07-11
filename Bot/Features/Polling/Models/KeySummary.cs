@@ -1,6 +1,6 @@
 namespace Mira.Features.Polling.Models;
 
-public class KeyStatus
+public class KeySummary
 {
     public string StreamKey { get; set; }
     public long FirstSeenEpoch { get; set; }

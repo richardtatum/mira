@@ -6,7 +6,7 @@ namespace Mira.Features.Polling;
 
 public class BroadcastBoxClient(IHttpClientFactory httpClientFactory, ILogger<BroadcastBoxClient> logger)
 {
-    public async Task<KeyStatus[]> GetStreamsAsync(string hostUrl)
+    public async Task<KeySummary[]> GetStreamsAsync(string hostUrl)
     {
         if (string.IsNullOrWhiteSpace(hostUrl))
         {
@@ -22,7 +22,7 @@ public class BroadcastBoxClient(IHttpClientFactory httpClientFactory, ILogger<Br
             return [];
         }
 
-        var statuses = await result.Content.ReadFromJsonAsync<KeyStatus[]>();
+        var statuses = await result.Content.ReadFromJsonAsync<KeySummary[]>();
         if (statuses is null)
         {
             var rawResponse = await result.Content.ReadAsStringAsync();
