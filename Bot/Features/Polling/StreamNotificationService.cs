@@ -1,11 +1,11 @@
 using Discord;
 using Discord.WebSocket;
 using Microsoft.Extensions.Logging;
-using Mira.Features.StreamChecker.Models;
-using Mira.Features.StreamChecker.Repositories;
-using Host = Mira.Features.StreamChecker.Models.Host;
+using Mira.Features.Polling.Models;
+using Mira.Features.Polling.Repositories;
+using Host = Mira.Features.Polling.Models.Host;
 
-namespace Mira.Features.StreamChecker;
+namespace Mira.Features.Polling;
 
 public class StreamNotificationService
 {

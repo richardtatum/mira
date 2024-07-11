@@ -1,8 +1,8 @@
 using System.Net.Http.Json;
 using Microsoft.Extensions.Logging;
-using Mira.Features.StreamChecker.Models;
+using Mira.Features.Polling.Models;
 
-namespace Mira.Features.StreamChecker;
+namespace Mira.Features.Polling;
 
 public class BroadcastBoxClient(IHttpClientFactory httpClientFactory, ILogger<BroadcastBoxClient> logger)
 {

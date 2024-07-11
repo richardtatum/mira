@@ -1,8 +1,8 @@
 using Dapper;
 using Mira.Data;
-using Mira.Features.StreamChecker.Models;
+using Mira.Features.Polling.Models;
 
-namespace Mira.Features.StreamChecker.Repositories;
+namespace Mira.Features.Polling.Repositories;
 
 public class CommandRepository(DbContext context)
 {

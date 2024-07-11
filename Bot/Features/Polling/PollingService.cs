@@ -1,14 +1,14 @@
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Mira.Features.StreamChecker.Repositories;
-using Host = Mira.Features.StreamChecker.Models.Host;
+using Mira.Features.Polling.Repositories;
+using Host = Mira.Features.Polling.Models.Host;
 
-namespace Mira.Features.StreamChecker;
+namespace Mira.Features.Polling;
 
-public class PeriodicStreamChecker(
+public class PollingService(
     QueryRepository query,
     StreamNotificationService service,
-    ILogger<PeriodicStreamChecker> logger)
+    ILogger<PollingService> logger)
     : BackgroundService
 {
     // TODO: Load from IOptions

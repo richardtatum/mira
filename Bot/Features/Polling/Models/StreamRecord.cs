@@ -1,4 +1,4 @@
-namespace Mira.Features.StreamChecker.Models;
+namespace Mira.Features.Polling.Models;
 
 public class StreamRecord
 {
