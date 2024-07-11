@@ -13,6 +13,7 @@ public class BroadcastBoxClient(IHttpClientFactory httpClientFactory, ILogger<Br
 
         var client = httpClientFactory.CreateClient(hostUrl);
         // Set a timeout in case the URL can't be contacted at all
+        // TODO: Load from IOptions
         client.Timeout = TimeSpan.FromSeconds(1);
 
         try
@@ -20,9 +21,9 @@ public class BroadcastBoxClient(IHttpClientFactory httpClientFactory, ILogger<Br
             var result = await client.GetAsync($"{hostUrl}/api/status");
             return result.IsSuccessStatusCode;
         }
-        catch (Exception ex)
+        catch (TaskCanceledException ex)
         {
-            Console.WriteLine($"Fucked: {ex.Message}");
+            logger.LogWarning("[BROADCASTBOX-CLIENT][{Host}] Failed to add host as request timed out before it could be completed. Ex: {Ex}", hostUrl, ex.Message);
             return false;
         }
     }
