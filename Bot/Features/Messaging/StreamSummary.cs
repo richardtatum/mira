@@ -1,16 +1,16 @@
-namespace Mira.Features.Polling.Models;
+using Mira.Features.Shared;
+
+namespace Mira.Features.Messaging;
 
 public class StreamSummary
 {
-    public int SubscriptionId { get; set; }
-    public string Host { get; set; } = null!;
     public string StreamKey { get; set; } = null!;
+    public string Host { get; set; } = null!;
+    public int ViewerCount { get; set; }
     public ulong Channel { get; set; }
-    public int Viewers { get; set; }
+    public StreamStatus Status { get; set; }
     public DateTime StartTime { get; set; }
     public DateTime? EndTime { get; set; }
-    
-    public bool IsLive { get; set; }
     public string Url => $"{Host}/{StreamKey}";
     public TimeSpan? Duration => EndTime?.Subtract(StartTime);
 }
