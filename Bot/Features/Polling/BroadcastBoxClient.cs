@@ -6,7 +6,7 @@ namespace Mira.Features.Polling;
 
 public class BroadcastBoxClient(IHttpClientFactory httpClientFactory, ILogger<BroadcastBoxClient> logger)
 {
-    public async Task<IEnumerable<KeyStatus>> GetStreamsAsync(string hostUrl)
+    public async Task<KeyStatus[]> GetStreamsAsync(string hostUrl)
     {
         if (string.IsNullOrWhiteSpace(hostUrl))
         {
