@@ -7,7 +7,7 @@ namespace Mira.Features.Polling;
 
 public class PollingService(
     QueryRepository query,
-    StreamNotificationService service,
+    StreamStatusService service,
     ILogger<PollingService> logger)
     : BackgroundService
 {
@@ -66,7 +66,7 @@ public class PollingService(
             logger.LogInformation(
                 "[KEY-CHECKER][{Host}] {Subscriptions} key subscription(s) found. Checking for stream updates.",
                 host.Url, subscriptions.Length);
-            await service.CheckStreamsAsync(host, subscriptions);
+            await service.UpdateStreamsAsync(host, subscriptions);
         }
     }
 
