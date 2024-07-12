@@ -41,17 +41,17 @@ public class StreamStatusService(
                 continue;
             }
             
-            var message = await messageService.SendAsync(overview.ChannelId, overview.Status, overview.Url,
+            var messageId = await messageService.SendAsync(overview.ChannelId, overview.Status, overview.Url,
                 overview.ViewerCount,
                 overview.StartTime);
             
-            if (message?.Id is null)
+            if (messageId is null)
             {
                 logger.LogError("[NOTIFICATION-SERVICE][{Host}] Failed to send notification message Channel: {Channel}", overview.ChannelId);
                 continue;
             }
 
-            overview.MessageId = message.Id;
+            overview.MessageId = messageId;
             await command.UpsertStreamRecord(overview.ToStreamRecord());
         }
     }
@@ -73,38 +73,6 @@ public class StreamStatusService(
                 ViewerCount = stream.ViewerCount,
                 MessageId = existingStream?.MessageId,
                 ChannelId = stream.ChannelId
-            };
-        }
-
-        // Get all the existing streams missing from the current live list
-        var offlineStreams = existingLiveStreams
-            .Where(record => !currentLiveStreams
-                .Select(stream => stream.SubscriptionId)
-                .Contains(record.SubscriptionId)
-            )
-            .ToArray();
-
-        foreach (var stream in offlineStreams)
-        {
-            stream.Status = StreamStatus.Offline;
-            stream.EndTime = DateTime.UtcNow;
-            yield return stream;
-        }
-    }
-
-    internal IEnumerable<StreamRecord> GenerateStreamRecords(
-        IEnumerable<LiveStream> currentLiveStreams, IEnumerable<StreamRecord> existingLiveStreams)
-    {
-        foreach (var stream in currentLiveStreams)
-        {
-            var existingStream = existingLiveStreams.FirstOrDefault(x => x.SubscriptionId == stream.SubscriptionId);
-            yield return new StreamRecord
-            {
-                Id = existingStream?.Id,
-                SubscriptionId = stream.SubscriptionId,
-                Status = StreamStatus.Live,
-                StartTime = existingStream?.StartTime ?? DateTime.UtcNow,
-                ViewerCount = stream.ViewerCount
             };
         }
 

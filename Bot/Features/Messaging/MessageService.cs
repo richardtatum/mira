@@ -8,22 +8,14 @@ namespace Mira.Features.Messaging;
 
 public class MessageService(DiscordSocketClient discord, ILogger<MessageService> logger, QueryRepository queryRepository) : IMessageService
 {
-    public async Task<IUserMessage?> SendAsync(int subscriptionId)
-    {
-        // I'm not entirely certain this is right, but I needed to get this refactor closed out for the night
-        var stream = await queryRepository.GetStreamSummaryAsync(subscriptionId);
-        return await SendAsync(stream.ChannelId, stream.Status, stream.Url, stream.ViewerCount, stream.StartTime,
-            stream.EndTime);
-    }
-
-    public Task<IUserMessage?> SendAsync(ulong channelId, StreamStatus status, string url, int viewers, DateTime startTime,
+    public async Task<ulong?> SendAsync(ulong channelId, StreamStatus status, string url, int viewers, DateTime startTime,
         DateTime? endTime = null)
     {
         var channel = GetChannel(channelId);
         if (channel is null)
         {
             logger.LogCritical("[MESSAGE-SERVICE] Failed to retrieve channel for stream {Url}. Channel: {Channel}", url, channelId);
-            return Task.FromResult((IUserMessage?)null);
+            return null;
         }
 
         var duration = (endTime ?? DateTime.UtcNow).Subtract(startTime).ToString(@"hh\:mm");
@@ -35,17 +27,18 @@ public class MessageService(DiscordSocketClient discord, ILogger<MessageService>
             _ => throw new ArgumentOutOfRangeException(nameof(status), status, null)
         };
 
-        return channel.SendMessageAsync(embed: embed);
+        var message = await channel.SendMessageAsync(embed: embed);
+        return message.Id;
     }
 
-    public Task<IUserMessage?> UpdateAsync(ulong messageId, ulong channelId, StreamStatus status, string url, int viewers, DateTime startTime,
+    public async Task UpdateAsync(ulong messageId, ulong channelId, StreamStatus status, string url, int viewers, DateTime startTime,
         DateTime? endTime = null)
     {
         var channel = GetChannel(channelId);
         if (channel is null)
         {
             logger.LogCritical("[MESSAGE-SERVICE] Failed to retrieve channel for stream {Url}. Channel: {Channel}", url, channelId);
-            return Task.FromResult((IUserMessage?)null);
+            return;
         }
         
         var duration = (endTime ?? DateTime.UtcNow).Subtract(startTime).ToString(@"hh\:mm");
@@ -56,8 +49,7 @@ public class MessageService(DiscordSocketClient discord, ILogger<MessageService>
             _ => throw new ArgumentOutOfRangeException(nameof(status), status, null)
         };
 
-        // Updating the embed means that the stream started with localized time doesn't work
-        return channel.ModifyMessageAsync(messageId, properties => properties.Embed = embed);
+        await channel.ModifyMessageAsync(messageId, properties => properties.Embed = embed);
     }
 
     private IMessageChannel? GetChannel(ulong channelId) => discord.GetChannel(channelId) as IMessageChannel;
