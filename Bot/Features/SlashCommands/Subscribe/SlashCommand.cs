@@ -1,3 +1,4 @@
+using System.Net;
 using Discord;
 using Discord.WebSocket;
 using Mira.Features.SlashCommands.Subscribe.Models;
@@ -31,9 +32,12 @@ public class SlashCommand(QueryRepository queryRepository, CommandRepository com
         var streamKey = command.Data.Options.First(x => x.Name == StreamKeyOptionName).Value.ToString();
         if (string.IsNullOrWhiteSpace(streamKey))
         {
-            // Return failure message
+            await command.RespondAsync($"`{streamKey}` is an invalid stream key. Please double check and try again.");
             return;
         }
+        
+        // Sanitise the streamKey
+        streamKey = WebUtility.UrlEncode(streamKey);
 
         var channelId = command.ChannelId;
         var guildId = command.GuildId;
@@ -64,11 +68,11 @@ public class SlashCommand(QueryRepository queryRepository, CommandRepository com
         var hostOptions = hosts
             .Select(host =>
                 new SelectMenuOptionBuilder(host.Url, host.Id.ToString(),
-                    $"Create notification for {host.Url}/{streamKey}"))
+                    $"Monitored URL: {host.Url}/{streamKey}"))
             .ToList();
 
         var component = new ComponentBuilder()
-            .WithSelectMenu($"{CustomId}-{subscriptionId}", hostOptions, $"Where will {streamKey} stream?")
+            .WithSelectMenu($"{CustomId}-{subscriptionId}", hostOptions, $"Where will `{streamKey}` stream?")
             .Build();
 
         await command.FollowupAsync("Select a host:", components: component);
@@ -109,12 +113,7 @@ public class SlashCommand(QueryRepository queryRepository, CommandRepository com
             message.Components = new ComponentBuilder().Build();
         });
 
-        var watchNowButton = new ComponentBuilder()
-            .WithButton("Watch now!", style: ButtonStyle.Link, url: url)
-            .Build();
-
         await component.InteractionChannel.SendMessageAsync(
-            $"New subscription added for `{url}`! Notifications will be sent to this channel when the stream goes live.",
-            components: watchNowButton);
+            $"New subscription added for `{url}`! Notifications will be sent to this channel when the stream goes live.");
     }
 }
