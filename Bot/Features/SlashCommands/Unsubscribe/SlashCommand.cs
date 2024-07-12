@@ -24,11 +24,13 @@ public class SlashCommand(QueryRepository queryRepository, CommandRepository com
             // Failure message
             return;
         }
+
+        await command.DeferAsync(ephemeral: true);
         
         var guildSubscriptions = await queryRepository.GetSubscriptionsAsync(guildId.Value);
         if (guildSubscriptions.Length == 0)
         {
-            await command.RespondAsync("No subscriptions found for this server.");
+            await command.FollowupAsync("No subscriptions found for this server.");
             return;
         }
         
@@ -40,7 +42,7 @@ public class SlashCommand(QueryRepository queryRepository, CommandRepository com
             .WithSelectMenu(CustomId, unsubscribeOptions)
             .Build();
 
-        await command.RespondAsync("Select a stream to unsubscribe from:", components: component, ephemeral: true);
+        await command.FollowupAsync("Select a stream to unsubscribe from:", components: component);
     }
     
     public bool HandlesComponent(SocketMessageComponent component) => component.Data.CustomId == CustomId;
@@ -61,6 +63,7 @@ public class SlashCommand(QueryRepository queryRepository, CommandRepository com
         
         await component.DeferAsync();
 
+        // TODO: Use this response to obtain the createdBy and see if it matches
         var subscription = await queryRepository.GetSubscriptionAsync(subscriptionId, guildId.Value);
         if (subscription is null)
         {
