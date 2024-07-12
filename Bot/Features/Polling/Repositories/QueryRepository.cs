@@ -41,7 +41,7 @@ public class QueryRepository(DbContext context)
     {
         using var connection = context.CreateConnection();
         var results = await connection.QueryAsync<Subscription>(
-            @"SELECT s.id, s.stream_key streamKey, s.channel 
+            @"SELECT s.id, s.stream_key streamKey, s.channel_id channelId
                 FROM subscription s
                 INNER JOIN host h ON s.host_id = h.id
                 WHERE h.url = @hostUrl", new

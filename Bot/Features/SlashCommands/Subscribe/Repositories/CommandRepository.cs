@@ -13,13 +13,13 @@ public class CommandRepository(DbContext context)
         // Query single allows us to return the ID of the inserted row
         return await connection.QuerySingleAsync<int>(
             @"INSERT INTO subscription
-                (stream_key, channel, created_by)
+                (stream_key, channel_id, created_by)
                 VALUES
-                (@streamKey, @channel, @createdBy)
+                (@streamKey, @channelId, @createdBy)
                 RETURNING id", new
             {
                 streamKey = subscription.StreamKey,
-                channel = subscription.Channel,
+                channelId = subscription.ChannelId,
                 createdBy = subscription.CreatedBy
             });
     }

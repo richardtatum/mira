@@ -1,11 +1,12 @@
 namespace Mira.Features.SlashCommands.Subscribe.Models;
 
+// TODO: Remove null references where possible!
 public class Subscription : IEquatable<Subscription>
 {
     public int? Id { get; set; }
     public string StreamKey { get; set; } = null!;
     public ulong? HostId { get; set; }
-    public ulong? Channel { get; set; }
+    public ulong? ChannelId { get; set; }
     public ulong? CreatedBy { get; set; }
 
     public bool Equals(Subscription? other)

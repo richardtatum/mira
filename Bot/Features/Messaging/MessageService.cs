@@ -12,7 +12,7 @@ public class MessageService(DiscordSocketClient discord, ILogger<MessageService>
     {
         // I'm not entirely certain this is right, but I needed to get this refactor closed out for the night
         var stream = await queryRepository.GetStreamSummaryAsync(subscriptionId);
-        return await SendAsync(stream.Channel, stream.Status, stream.Url, stream.ViewerCount, stream.StartTime,
+        return await SendAsync(stream.ChannelId, stream.Status, stream.Url, stream.ViewerCount, stream.StartTime,
             stream.EndTime);
     }
 

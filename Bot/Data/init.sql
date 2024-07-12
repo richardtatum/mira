@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS subscription (
     id INTEGER PRIMARY KEY NOT NULL,
     host_id INTEGER NULL,
     stream_key TEXT NULL,
-    channel TEXT NOT NULL,
+    channel_id INTEGER NOT NULL,
     created_by INTEGER NOT NULL,
     FOREIGN KEY (host_id) REFERENCES host(id)
 );

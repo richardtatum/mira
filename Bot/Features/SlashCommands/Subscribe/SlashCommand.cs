@@ -46,7 +46,7 @@ public class SlashCommand(QueryRepository queryRepository, CommandRepository com
         var subscription = new Subscription
         {
             StreamKey = streamKey,
-            Channel = channelId,
+            ChannelId = channelId,
             CreatedBy = command.User.Id
         };
 
