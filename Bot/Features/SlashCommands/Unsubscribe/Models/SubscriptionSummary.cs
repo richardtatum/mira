@@ -1,4 +1,4 @@
-namespace Mira.Features.SlashCommands.Subscribe.Models;
+namespace Mira.Features.SlashCommands.Unsubscribe.Models;
 
 public class SubscriptionSummary
 {

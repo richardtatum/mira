@@ -1,6 +1,6 @@
 using Dapper;
 using Mira.Data;
-using Mira.Features.SlashCommands.Subscribe.Models;
+using Mira.Features.SlashCommands.Unsubscribe.Models;
 
 namespace Mira.Features.SlashCommands.Unsubscribe.Repositories;
 
