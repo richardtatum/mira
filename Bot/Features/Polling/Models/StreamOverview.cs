@@ -13,13 +13,12 @@ public class StreamOverview
     public int ViewerCount { get; set; }
     public DateTime StartTime { get; set; }
     public DateTime? EndTime { get; set; }
-    public string Url => $"{HostUrl}/{StreamKey}";
-    
-    // Interfaced?
     public ulong? MessageId { get; set; }
     public ulong ChannelId { get; set; }
+    public string Url => $"{HostUrl}/{StreamKey}";
+    public TimeSpan Duration => (EndTime ?? DateTime.UtcNow).Subtract(StartTime);
 
-    public StreamRecord ToStreamRecord() => new StreamRecord
+    public StreamRecord ToStreamRecord() => new()
     {
         Id = Id,
         SubscriptionId = SubscriptionId,
@@ -29,7 +28,4 @@ public class StreamOverview
         StartTime = StartTime,
         EndTime = EndTime
     };
-    
-    
-    // NotificationState property? New/Update
 }

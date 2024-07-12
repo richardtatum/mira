@@ -7,6 +7,9 @@ using Host = Mira.Features.Polling.Models.Host;
 
 namespace Mira.Features.Polling;
 
+// TODO: Update to use the stream start time from the endpoint, rather than UTCNOW
+// TODO: Simplify the below if possible
+// TODO: Separate/uncouple the messaging service from the polling/stream updates?
 public class StreamStatusService(
     BroadcastBoxClient client,
     ILogger<StreamStatusService> logger,
@@ -14,7 +17,6 @@ public class StreamStatusService(
     CommandRepository command,
     IMessageService messageService) // This seems wrong, having polling rely on the message service
 {
-
     internal async Task UpdateStreamsAsync(Host host, Subscription[] subscriptions)
     {
         if (subscriptions.Length == 0)
@@ -25,25 +27,17 @@ public class StreamStatusService(
 
         var currentLiveStreams = await GetSubscribedLiveStreamsAsync(host, subscriptions);
         var existingLiveStreams = await query.GetLiveStreamsAsync(subscriptions.Select(x => x.Id));
-        
-        var streamOverviews = GenerateStreamOverviews(currentLiveStreams, existingLiveStreams);
+        var streams = GenerateStreamOverviews(currentLiveStreams, existingLiveStreams);
 
-        // This doesn't work if the message fails to send due to incorrect channel
-        var messageTasks = streamOverviews.Select(async stream =>
+        var messageTasks = streams.Select(async stream =>
         {
-            var messageId = stream.MessageId is null
-                ? await messageService.SendAsync(stream.ChannelId, stream.Status, stream.Url,
-                    stream.ViewerCount,
-                    stream.StartTime)
-                : await messageService.UpdateAsync(stream.MessageId.Value, stream.ChannelId, stream.Status,
-                    stream.Url,
-                    stream.ViewerCount,
-                    stream.StartTime, stream.EndTime);
+            var messageId = await SendMessageAsync(stream);
             return (messageId, stream);
         });
 
         var results = await Task.WhenAll(messageTasks);
-        
+
+        // TODO: Update this to mark any that have failed to send as invalid and remove them with a notification?
         // This just skips anything that fails to send as a message, is this a problem? Potentially leaves records of open streams?
         var upsertTasks = results
             .Where(result => result.messageId is not null)
@@ -92,7 +86,7 @@ public class StreamStatusService(
             yield return stream;
         }
     }
-    
+
     internal async Task<LiveStream[]> GetSubscribedLiveStreamsAsync(Host host, Subscription[] subscriptions)
     {
         if (subscriptions.Length == 0)
@@ -100,10 +94,10 @@ public class StreamStatusService(
             logger.LogInformation("[NOTIFICATION-SERVICE][{Host}] No subscriptions provided. Skipping.", host.Url);
             return [];
         }
-        
+
         var streams = await client.GetStreamsAsync(host.Url);
         var liveStreams = streams.Where(stream => stream.IsLive).ToArray();
-        
+
         return subscriptions
             .Where(subscription => liveStreams.Select(stream => stream.StreamKey).Contains(subscription.StreamKey))
             .Select(subscription =>
@@ -120,4 +114,13 @@ public class StreamStatusService(
             })
             .ToArray();
     }
+
+    internal Task<ulong?> SendMessageAsync(StreamOverview stream) => stream.MessageId is not null
+        ? messageService.ModifyAsync(stream.MessageId.Value, stream.ChannelId, stream.Status,
+            stream.Url,
+            stream.ViewerCount,
+            stream.Duration)
+        : messageService.SendAsync(stream.ChannelId, stream.Status, stream.Url,
+            stream.ViewerCount,
+            stream.Duration);
 }
