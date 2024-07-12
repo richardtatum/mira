@@ -31,14 +31,14 @@ public class MessageService(DiscordSocketClient discord, ILogger<MessageService>
         return message.Id;
     }
 
-    public async Task UpdateAsync(ulong messageId, ulong channelId, StreamStatus status, string url, int viewers, DateTime startTime,
+    public async Task<ulong?> UpdateAsync(ulong messageId, ulong channelId, StreamStatus status, string url, int viewers, DateTime startTime,
         DateTime? endTime = null)
     {
         var channel = GetChannel(channelId);
         if (channel is null)
         {
             logger.LogCritical("[MESSAGE-SERVICE] Failed to retrieve channel for stream {Url}. Channel: {Channel}", url, channelId);
-            return;
+            return null;
         }
         
         var duration = (endTime ?? DateTime.UtcNow).Subtract(startTime).ToString(@"hh\:mm");
@@ -49,7 +49,8 @@ public class MessageService(DiscordSocketClient discord, ILogger<MessageService>
             _ => throw new ArgumentOutOfRangeException(nameof(status), status, null)
         };
 
-        await channel.ModifyMessageAsync(messageId, properties => properties.Embed = embed);
+        var message = await channel.ModifyMessageAsync(messageId, properties => properties.Embed = embed);
+        return message.Id;
     }
 
     private IMessageChannel? GetChannel(ulong channelId) => discord.GetChannel(channelId) as IMessageChannel;
