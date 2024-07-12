@@ -8,6 +8,7 @@ public class StreamRecord
     public int SubscriptionId { get; set; }
     public StreamStatus Status { get; set; }
     public int ViewerCount { get; set; }
+    public ulong MessageId { get; set; }
     public DateTime StartTime { get; set; }
     public DateTime? EndTime { get; set; }
 }

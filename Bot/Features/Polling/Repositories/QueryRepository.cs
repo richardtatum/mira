@@ -7,14 +7,26 @@ namespace Mira.Features.Polling.Repositories;
 
 public class QueryRepository(DbContext context)
 {
-    internal async Task<StreamRecord[]> GetLiveStreamsAsync(IEnumerable<int> subscriptionIds)
+    internal async Task<StreamOverview[]> GetLiveStreamsAsync(IEnumerable<int> subscriptionIds)
     {
         using var connection = context.CreateConnection();
 
-        var results = await connection.QueryAsync<StreamRecord>(
-            @"SELECT id, subscription_id subscriptionId, status, start_time startTime, end_time endTime
-                FROM stream
-                WHERE subscription_id IN @subscriptionIds AND status = @live", new
+        var results = await connection.QueryAsync<StreamOverview>(
+            @"SELECT 
+                    s.id,
+                    s.subscription_id subscriptionId,
+                    sub.stream_key streamKey,
+                    h.url hostUrl,
+                    s.status,
+                    s.viewer_count viewerCount,
+                    s.start_time startTime,
+                    s.end_time endTime,
+                    s.message_id messageId,
+                    sub.channel_id channelId
+                FROM stream s
+                INNER JOIN subscription sub ON sub.id = s.subscription_id
+                INNER JOIN host h ON h.id = sub.host_id
+                WHERE s.subscription_id IN @subscriptionIds AND s.status = @live", new
             {
                 subscriptionIds,
                 live = StreamStatus.Live

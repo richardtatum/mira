@@ -23,26 +23,78 @@ public class StreamStatusService(
             return;
         }
 
-        var subscriptionIds = subscriptions.Select(x => x.Id);
-        var existingLiveStreams = await query.GetLiveStreamsAsync(subscriptionIds);
-       
         var currentLiveStreams = await GetSubscribedLiveStreamsAsync(host, subscriptions);
-        var records = GenerateStreamRecords(currentLiveStreams, existingLiveStreams);
+        var existingLiveStreams = await query.GetLiveStreamsAsync(subscriptions.Select(x => x.Id));
+        
+        var streamOverviews = GenerateStreamOverviews(currentLiveStreams, existingLiveStreams);
 
-        var upsertTasks = records.Select(command.UpsertStreamRecord);
-        await Task.WhenAll(upsertTasks);
+        // THIS IS SLOW!
+        foreach (var overview in streamOverviews)
+        {
+            if (overview.MessageId is not null)
+            {
+                await messageService.UpdateAsync(overview.MessageId.Value, overview.ChannelId, overview.Status, overview.Url,
+                    overview.ViewerCount,
+                    overview.StartTime, overview.EndTime);
 
-        // We only notify about records that are to be created (Id is null) or have just been marked as offline
-        // TODO: Need to switch this to send new messages, update existing ones (with new viewer count)
-        var notifications = records.Where(record => record.Id is null || record.Status == StreamStatus.Offline);
-        var messageTasks = notifications.Select(notify => messageService.SendAsync(notify.SubscriptionId));
-        await Task.WhenAll(messageTasks);
+                await command.UpsertStreamRecord(overview.ToStreamRecord());
+                continue;
+            }
+            
+            var message = await messageService.SendAsync(overview.ChannelId, overview.Status, overview.Url,
+                overview.ViewerCount,
+                overview.StartTime);
+            
+            if (message?.Id is null)
+            {
+                logger.LogError("[NOTIFICATION-SERVICE][{Host}] Failed to send notification message Channel: {Channel}", overview.ChannelId);
+                continue;
+            }
+
+            overview.MessageId = message.Id;
+            await command.UpsertStreamRecord(overview.ToStreamRecord());
+        }
+    }
+
+    internal IEnumerable<StreamOverview> GenerateStreamOverviews(
+        IEnumerable<LiveStream> currentLiveStreams, IEnumerable<StreamOverview> existingLiveStreams)
+    {
+        foreach (var stream in currentLiveStreams)
+        {
+            var existingStream = existingLiveStreams.FirstOrDefault(x => x.SubscriptionId == stream.SubscriptionId);
+            yield return new StreamOverview
+            {
+                Id = existingStream?.Id,
+                SubscriptionId = stream.SubscriptionId,
+                StreamKey = stream.StreamKey,
+                HostUrl = stream.HostUrl,
+                Status = StreamStatus.Live,
+                StartTime = existingStream?.StartTime ?? DateTime.UtcNow,
+                ViewerCount = stream.ViewerCount,
+                MessageId = existingStream?.MessageId,
+                ChannelId = stream.ChannelId
+            };
+        }
+
+        // Get all the existing streams missing from the current live list
+        var offlineStreams = existingLiveStreams
+            .Where(record => !currentLiveStreams
+                .Select(stream => stream.SubscriptionId)
+                .Contains(record.SubscriptionId)
+            )
+            .ToArray();
+
+        foreach (var stream in offlineStreams)
+        {
+            stream.Status = StreamStatus.Offline;
+            stream.EndTime = DateTime.UtcNow;
+            yield return stream;
+        }
     }
 
     internal IEnumerable<StreamRecord> GenerateStreamRecords(
         IEnumerable<LiveStream> currentLiveStreams, IEnumerable<StreamRecord> existingLiveStreams)
     {
-        // TODO: YOU NEED TO SPECIFY START TIME FOR NEW STREAMS OTHERWISE IT MAY USE THE LAST STREAMS STARTTIME
         foreach (var stream in currentLiveStreams)
         {
             var existingStream = existingLiveStreams.FirstOrDefault(x => x.SubscriptionId == stream.SubscriptionId);
@@ -92,8 +144,9 @@ public class StreamStatusService(
                 {
                     SubscriptionId = subscription.Id,
                     StreamKey = subscription.StreamKey,
-                    Host = host.Url,
+                    HostUrl = host.Url,
                     ViewerCount = stream.CurrentViewers,
+                    ChannelId = subscription.ChannelId
                 };
             })
             .ToArray();

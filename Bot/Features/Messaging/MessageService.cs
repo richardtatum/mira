@@ -28,7 +28,6 @@ public class MessageService(DiscordSocketClient discord, ILogger<MessageService>
 
         var duration = (endTime ?? DateTime.UtcNow).Subtract(startTime).ToString(@"hh\:mm");
         
-        // Need to ensure endtime is provided for offline streams
         var embed = status switch
         {
             StreamStatus.Live => MessageEmbed.Live(url, viewers, duration),
@@ -39,29 +38,27 @@ public class MessageService(DiscordSocketClient discord, ILogger<MessageService>
         return channel.SendMessageAsync(embed: embed);
     }
 
-    public Task<IUserMessage> UpdateAsync(ulong messageId, StreamStatus status, string url, int viewers, DateTime startTime,
+    public Task<IUserMessage?> UpdateAsync(ulong messageId, ulong channelId, StreamStatus status, string url, int viewers, DateTime startTime,
         DateTime? endTime = null)
     {
-        throw new NotImplementedException();
+        var channel = GetChannel(channelId);
+        if (channel is null)
+        {
+            logger.LogCritical("[MESSAGE-SERVICE] Failed to retrieve channel for stream {Url}. Channel: {Channel}", url, channelId);
+            return Task.FromResult((IUserMessage?)null);
+        }
+        
+        var duration = (endTime ?? DateTime.UtcNow).Subtract(startTime).ToString(@"hh\:mm");
+        var embed = status switch
+        {
+            StreamStatus.Live => MessageEmbed.Live(url, viewers, duration),
+            StreamStatus.Offline => MessageEmbed.Offline(url, viewers, duration),
+            _ => throw new ArgumentOutOfRangeException(nameof(status), status, null)
+        };
+
+        // Updating the embed means that the stream started with localized time doesn't work
+        return channel.ModifyMessageAsync(messageId, properties => properties.Embed = embed);
     }
 
-    public Task<IUserMessage> SendAsync(ulong channelId, string? text = null, Embed? embed = null)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task UpdateAsync(ulong messageId, string? text = null, Embed? embed = null)
-    {
-        throw new NotImplementedException();
-    }
-
-    private IMessageChannel? GetChannel(ulong channelId)
-    {
-        return discord.GetChannel(channelId) as IMessageChannel;;
-    }
-
-    private string CalculateDuration(TimeSpan timeSpan)
-    {
-        return timeSpan.ToString("hh:mm");
-    }
+    private IMessageChannel? GetChannel(ulong channelId) => discord.GetChannel(channelId) as IMessageChannel;
 }
