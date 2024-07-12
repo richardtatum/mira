@@ -1,6 +1,7 @@
 using Discord;
 using Discord.WebSocket;
 using Mira.Extensions;
+using Mira.Features.SlashCommands.AddHost.Models;
 using Mira.Features.SlashCommands.AddHost.Repositories;
 using Mira.Interfaces;
 
@@ -38,11 +39,12 @@ public class SlashCommand(BroadcastBoxClient client, CommandRepository commandRe
         var guildId = command.GuildId;
         if (guildId is null)
         {
+            // Return failure message
             return;
         }
 
-        var host = command.Data.Options.GetValue<string>(HostOptionName);
-        if (string.IsNullOrWhiteSpace(host))
+        var hostUrl = command.Data.Options.GetValue<string>(HostOptionName);
+        if (string.IsNullOrWhiteSpace(hostUrl))
         {
             // Return failure message
             return;
@@ -59,10 +61,10 @@ public class SlashCommand(BroadcastBoxClient client, CommandRepository commandRe
         
         await command.DeferAsync();
 
-        var isValidUrl = IsValidUrl(host, out var validHostUrl);
+        var isValidUrl = IsValidUrl(hostUrl, out var validHostUrl);
         if (!isValidUrl)
         {
-            await command.FollowupAsync($"Provided URL `{host}` is invalid. Please check and try again.");
+            await command.FollowupAsync($"Provided URL `{hostUrl}` is invalid. Please check and try again.");
             return;
         }
 
@@ -81,7 +83,8 @@ public class SlashCommand(BroadcastBoxClient client, CommandRepository commandRe
             return;
         }
 
-        await commandRepository.AddHostAsync(validHostUrl!, interval, guildId.Value);
+        var host = new Host(validHostUrl!, interval, guildId.Value, command.User.Id);
+        await commandRepository.AddHostAsync(host);
         await command.FollowupAsync($"Success! Added host `{validHostUrl}` with a polling interval of {interval} seconds.");
     }
     
