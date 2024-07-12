@@ -17,6 +17,8 @@ public class StreamStatusService(
     CommandRepository command,
     IMessageService messageService) // This seems wrong, having polling rely on the message service
 {
+    // I am still not happy with this approach. Probably makes more sense to do event based however I am worried about even more
+    // running background services
     internal async Task UpdateStreamsAsync(Host host, Subscription[] subscriptions)
     {
         if (subscriptions.Length == 0)
