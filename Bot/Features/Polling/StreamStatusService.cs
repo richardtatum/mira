@@ -28,32 +28,33 @@ public class StreamStatusService(
         
         var streamOverviews = GenerateStreamOverviews(currentLiveStreams, existingLiveStreams);
 
-        // THIS IS SLOW!
-        foreach (var overview in streamOverviews)
+        // This doesn't work if the message fails to send due to incorrect channel
+        var messageTasks = streamOverviews.Select(async stream =>
         {
-            if (overview.MessageId is not null)
-            {
-                await messageService.UpdateAsync(overview.MessageId.Value, overview.ChannelId, overview.Status, overview.Url,
-                    overview.ViewerCount,
-                    overview.StartTime, overview.EndTime);
+            var messageId = stream.MessageId is null
+                ? await messageService.SendAsync(stream.ChannelId, stream.Status, stream.Url,
+                    stream.ViewerCount,
+                    stream.StartTime)
+                : await messageService.UpdateAsync(stream.MessageId.Value, stream.ChannelId, stream.Status,
+                    stream.Url,
+                    stream.ViewerCount,
+                    stream.StartTime, stream.EndTime);
+            return (messageId, stream);
+        });
 
-                await command.UpsertStreamRecord(overview.ToStreamRecord());
-                continue;
-            }
-            
-            var messageId = await messageService.SendAsync(overview.ChannelId, overview.Status, overview.Url,
-                overview.ViewerCount,
-                overview.StartTime);
-            
-            if (messageId is null)
+        var results = await Task.WhenAll(messageTasks);
+        
+        // This just skips anything that fails to send as a message, is this a problem? Potentially leaves records of open streams?
+        var upsertTasks = results
+            .Where(result => result.messageId is not null)
+            .Select(result =>
             {
-                logger.LogError("[NOTIFICATION-SERVICE][{Host}] Failed to send notification message Channel: {Channel}", overview.ChannelId);
-                continue;
-            }
+                result.stream.MessageId = result.messageId;
+                return command.UpsertStreamRecord(result.stream.ToStreamRecord());
+            })
+            .ToArray();
 
-            overview.MessageId = messageId;
-            await command.UpsertStreamRecord(overview.ToStreamRecord());
-        }
+        await Task.WhenAll(upsertTasks);
     }
 
     internal IEnumerable<StreamOverview> GenerateStreamOverviews(
