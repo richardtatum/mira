@@ -3,6 +3,7 @@ CREATE TABLE IF NOT EXISTS host (
     url TEXT NOT NULL,
     poll_interval_seconds INTEGER DEFAULT 30 NOT NULL,
     guild_id INTEGER NOT NULL,
+    created_by INTEGER NOT NULL,
     UNIQUE (url, guild_id)
 );
 
@@ -12,7 +13,7 @@ CREATE TABLE IF NOT EXISTS subscription (
     stream_key TEXT NULL,
     channel_id INTEGER NOT NULL,
     created_by INTEGER NOT NULL,
-    FOREIGN KEY (host_id) REFERENCES host(id)
+    FOREIGN KEY (host_id) REFERENCES host(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS stream (
@@ -23,6 +24,6 @@ CREATE TABLE IF NOT EXISTS stream (
     message_id INTEGER NOT NULL,
     start_time TEXT NOT NULL,
     end_time TEXT NULL,
-    FOREIGN KEY (subscription_id) REFERENCES subscription(id),
+    FOREIGN KEY (subscription_id) REFERENCES subscription(id) ON DELETE CASCADE,
     UNIQUE (subscription_id)
 );
