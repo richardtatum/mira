@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Mira.Features.SlashCommands.AddHost;
+using Mira.Features.SlashCommands.List;
 using Mira.Features.SlashCommands.RemoveHost;
 using Mira.Features.SlashCommands.Subscribe;
 using Mira.Features.SlashCommands.Unsubscribe;
@@ -15,7 +16,8 @@ public static class ServiceCollectionExtensions
             .AddAddHostSlashCommand()
             .AddRemoveHostCommand()
             .AddSubscribeSlashCommand()
-            .AddUnsubscribeSlashCommand();
+            .AddUnsubscribeSlashCommand()
+            .AddListSlashCommand();
 
         services.TryAddScoped<Builder>();
         services.TryAddScoped<Handler>();
