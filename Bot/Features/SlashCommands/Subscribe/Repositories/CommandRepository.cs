@@ -6,31 +6,24 @@ namespace Mira.Features.SlashCommands.Subscribe.Repositories;
 
 public class CommandRepository(DbContext context)
 {
-    internal async Task<int> AddSubscription(Subscription subscription)
+    internal async Task<bool> AddSubscription(Subscription subscription)
     {
         using var connection = context.CreateConnection();
 
         // Query single allows us to return the ID of the inserted row
-        return await connection.QuerySingleAsync<int>(
+        var result = await connection.ExecuteAsync(
             @"INSERT INTO subscription
-                (stream_key, channel_id, created_by)
+                (host_id, stream_key, channel_id, created_by)
                 VALUES
-                (@streamKey, @channelId, @createdBy)
+                (@hostId, @streamKey, @channelId, @createdBy)
                 RETURNING id", new
             {
+                hostId = subscription.HostId,
                 streamKey = subscription.StreamKey,
                 channelId = subscription.ChannelId,
                 createdBy = subscription.CreatedBy
             });
-    }
 
-    internal async Task UpdateSubscription(int subscriptionId, int hostId)
-    {
-        using var connection = context.CreateConnection();
-        await connection.ExecuteAsync(
-            @"UPDATE subscription SET host_id = @hostId WHERE id = @subscriptionId", new
-            {
-                hostId, subscriptionId = subscriptionId
-            });
+        return result == 1;
     }
 }

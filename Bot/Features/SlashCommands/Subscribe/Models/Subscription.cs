@@ -5,9 +5,9 @@ public class Subscription : IEquatable<Subscription>
 {
     public int? Id { get; set; }
     public string StreamKey { get; set; } = null!;
-    public ulong? HostId { get; set; }
-    public ulong? ChannelId { get; set; }
-    public ulong? CreatedBy { get; set; }
+    public int HostId { get; set; }
+    public ulong ChannelId { get; set; }
+    public ulong CreatedBy { get; set; }
 
     public bool Equals(Subscription? other)
     {

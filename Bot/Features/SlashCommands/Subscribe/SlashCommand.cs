@@ -39,24 +39,15 @@ public class SlashCommand(QueryRepository queryRepository, CommandRepository com
         // Sanitise the streamKey
         streamKey = WebUtility.UrlEncode(streamKey);
 
-        var channelId = command.ChannelId;
         var guildId = command.GuildId;
-        if (channelId is null || guildId is null)
+        if (guildId is null)
         {
             // Failure message
             return;
         }
 
-        var subscription = new Subscription
-        {
-            StreamKey = streamKey,
-            ChannelId = channelId,
-            CreatedBy = command.User.Id
-        };
-
         await command.DeferAsync(ephemeral: true);
 
-        var subscriptionId = await commandRepository.AddSubscription(subscription);
         var hosts = await queryRepository.GetHostsAsync(guildId.Value);
         if (hosts.Length == 0)
         {
@@ -72,7 +63,7 @@ public class SlashCommand(QueryRepository queryRepository, CommandRepository com
             .ToList();
 
         var component = new ComponentBuilder()
-            .WithSelectMenu($"{CustomId}-{subscriptionId}", hostOptions, $"Where will `{streamKey}` stream?")
+            .WithSelectMenu($"{CustomId}-{streamKey}", hostOptions, $"Where will `{streamKey}` stream?")
             .Build();
 
         await command.FollowupAsync("Select a host:", components: component);
@@ -83,19 +74,22 @@ public class SlashCommand(QueryRepository queryRepository, CommandRepository com
 
     public async Task RespondAsync(SocketMessageComponent component)
     {
-        var optionValue = component.Data.CustomId.Split("-").LastOrDefault();
-        if (!int.TryParse(optionValue, out var subscriptionId))
+        
+        var streamKey = component.Data.CustomId.Split("-").LastOrDefault();
+        if (string.IsNullOrWhiteSpace(streamKey))
         {
             // Log error
             return;
         }
-
-        await component.DeferAsync(ephemeral: true);
-        var record = await queryRepository.GetSubscriptionAsync(subscriptionId);
-        if (record?.Id is null)
+        
+        var channelId = component.ChannelId;
+        if (channelId is null)
         {
+            // Failure
             return;
         }
+
+        await component.DeferAsync(ephemeral: true);
 
         if (!int.TryParse(component.Data.Values.FirstOrDefault(), out var hostId))
         {
@@ -103,9 +97,28 @@ public class SlashCommand(QueryRepository queryRepository, CommandRepository com
         }
 
         var host = await queryRepository.GetHostAsync(hostId);
-        var url = $"{host.Url}/{record.StreamKey}";
+        if (host is null)
+        {
+            // Error
+            return;
+        }
+        
+        var subscription = new Subscription
+        {
+            StreamKey = streamKey,
+            HostId = hostId,
+            ChannelId = channelId.Value,
+            CreatedBy = component.User.Id
+        };
 
-        await commandRepository.UpdateSubscription(record.Id.Value, hostId);
+        var success = await commandRepository.AddSubscription(subscription);
+        if (!success)
+        {
+            await component.FollowupAsync("Failed to add new subscription. Please try again.");
+            return;
+        }
+        
+        var url = $"{host.Url}/{streamKey}";
 
         await component.ModifyOriginalResponseAsync(message =>
         {

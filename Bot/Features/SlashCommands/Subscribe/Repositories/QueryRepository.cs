@@ -18,21 +18,11 @@ public class QueryRepository(DbContext context)
         return results.ToArray();
     }
 
-    internal async Task<Host> GetHostAsync(int id)
+    internal async Task<Host?> GetHostAsync(int id)
     {
         using var connection = context.CreateConnection();
-        return await connection.QueryFirstAsync<Host>(
+        return await connection.QueryFirstAsync<Host?>(
             "SELECT id, url FROM host WHERE id = @id", new
-            {
-                id
-            });
-    }
-
-    internal async Task<Subscription?> GetSubscriptionAsync(int id)
-    {
-        using var connection = context.CreateConnection();
-        return await connection.QueryFirstAsync<Subscription>(
-            "SELECT id, stream_key streamKey, channel_id channelId, created_by createdBy FROM subscription WHERE id = @id", new
             {
                 id
             });
