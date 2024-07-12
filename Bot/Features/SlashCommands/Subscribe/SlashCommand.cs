@@ -102,6 +102,14 @@ public class SlashCommand(QueryRepository queryRepository, CommandRepository com
             // Error
             return;
         }
+
+        var keyExists = await queryRepository.HostStreamKeyExistsAsync(hostId, streamKey);
+        if (keyExists)
+        {
+            await component.FollowupAsync(
+                "This streamkey is already registered for this host. Please use `/list` to see all currently registered keys and hosts.");
+            return;
+        }
         
         var subscription = new Subscription
         {

@@ -13,7 +13,8 @@ CREATE TABLE IF NOT EXISTS subscription (
     stream_key TEXT NULL,
     channel_id INTEGER NOT NULL,
     created_by INTEGER NOT NULL,
-    FOREIGN KEY (host_id) REFERENCES host(id) ON DELETE CASCADE
+    FOREIGN KEY (host_id) REFERENCES host(id) ON DELETE CASCADE,
+    UNIQUE (host_id, stream_key)
 );
 
 CREATE TABLE IF NOT EXISTS stream (

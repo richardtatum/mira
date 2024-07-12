@@ -27,4 +27,17 @@ public class QueryRepository(DbContext context)
                 id
             });
     }
+
+    internal async Task<bool> HostStreamKeyExistsAsync(int hostId, string streamKey)
+    {
+        using var connection = context.CreateConnection();
+        var result = await connection.ExecuteScalarAsync<int>(
+            "SELECT COUNT(*) FROM subscription WHERE host_id = @hostId AND stream_key = @streamKey", new
+            {
+                hostId,
+                streamKey
+            });
+
+        return result > 0;
+    }
 }
