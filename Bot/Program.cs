@@ -8,7 +8,7 @@ using Mira.Features.Messaging;
 using Mira.Features.Polling;
 using Mira.Features.SlashCommands;
 
-var host = await Host.CreateDefaultBuilder()
+var host = Host.CreateDefaultBuilder()
     .ConfigureServices((_, services) =>
     {
         // Add services here.
@@ -21,7 +21,7 @@ var host = await Host.CreateDefaultBuilder()
         services.AddMessagingService();
 
     })
-    .StartAsync();
+    .Build();
 
 {
     // Ensure the DB is initialised
@@ -31,7 +31,6 @@ var host = await Host.CreateDefaultBuilder()
 }
 
 var client = host.Services.GetRequiredService<DiscordSocketClient>();
-var pollingService = host.Services.GetRequiredService<PollingService>();
 var slashCommandBuilder = host.Services.GetRequiredService<Builder>();
 var slashCommandHandler = host.Services.GetRequiredService<Handler>();
 
@@ -48,7 +47,7 @@ client.Log += message =>
     return Task.CompletedTask;
 };
 client.Ready += slashCommandBuilder.OnReadyAsync;
-client.Ready += pollingService.StartPolling;
+client.Ready += () => host.StartAsync();
 client.SlashCommandExecuted += slashCommandHandler.HandleCommandExecutedAsync;
 client.SelectMenuExecuted += slashCommandHandler.HandleSelectMenuExecutedAsync;
 
