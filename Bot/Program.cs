@@ -30,11 +30,16 @@ var host = Host.CreateDefaultBuilder()
     await context.InitAsync();
 }
 
+var cancellationTokenSource = new CancellationTokenSource();
+host.Services
+    .GetRequiredService<IHostApplicationLifetime>()
+    .ApplicationStopping
+    .Register(() => cancellationTokenSource.Cancel());
+
 var client = host.Services.GetRequiredService<DiscordSocketClient>();
 var slashCommandBuilder = host.Services.GetRequiredService<Builder>();
 var slashCommandHandler = host.Services.GetRequiredService<Handler>();
 
-// var token = Environment.GetEnvironmentVariable("DISCORD_TOKEN");
 // TODO: Dispose of this development token
 var token = "MTI1MDQ0NzIyOTU3MjA4NzgwOA.Ga3hQi.D9KFNvJfaXKU8hwfmJbfLSS-czBJCUTgtCit_s";
 await client.LoginAsync(TokenType.Bot, token);
@@ -51,5 +56,11 @@ client.Ready += () => host.StartAsync();
 client.SlashCommandExecuted += slashCommandHandler.HandleCommandExecutedAsync;
 client.SelectMenuExecuted += slashCommandHandler.HandleSelectMenuExecutedAsync;
 
-// Keep connection open
-await Task.Delay(Timeout.Infinite);
+try
+{
+    await Task.Delay(Timeout.Infinite, cancellationTokenSource.Token);
+}
+catch (TaskCanceledException)
+{
+    Console.WriteLine("[MIRA] Cancellation token fired, application shutting down.");
+}
