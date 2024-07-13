@@ -68,7 +68,7 @@ public class SlashCommand(BroadcastBoxClient client, CommandRepository commandRe
             return;
         }
 
-        var hostExists = await queryRepository.HostExistsAsync(validHostUrl!);
+        var hostExists = await queryRepository.HostExistsAsync(validHostUrl!, guildId.Value);
         if (hostExists)
         {
             await command.FollowupAsync($"Provided URL `{validHostUrl}` already exists.");
