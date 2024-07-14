@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Discord.WebSocket;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
@@ -11,7 +12,6 @@ using Mira.Features.SlashCommands;
 var host = Host.CreateDefaultBuilder()
     .ConfigureServices((_, services) =>
     {
-        // Add services here.
         services.TryAddScoped<DiscordSocketClient>();
         services.AddSingleton<DbContext>();
 
@@ -19,7 +19,6 @@ var host = Host.CreateDefaultBuilder()
         services.AddSlashCommands();
         services.AddPollingService();
         services.AddMessagingService();
-
     })
     .Build();
 
@@ -36,12 +35,13 @@ host.Services
     .ApplicationStopping
     .Register(() => cancellationTokenSource.Cancel());
 
+var configuration = host.Services.GetRequiredService<IConfiguration>();
 var client = host.Services.GetRequiredService<DiscordSocketClient>();
 var slashCommandBuilder = host.Services.GetRequiredService<Builder>();
 var slashCommandHandler = host.Services.GetRequiredService<Handler>();
 
 // TODO: Dispose of this development token
-var token = "MTI1MDQ0NzIyOTU3MjA4NzgwOA.Ga3hQi.D9KFNvJfaXKU8hwfmJbfLSS-czBJCUTgtCit_s";
+var token = configuration.GetValue<string>("Discord:Token");
 await client.LoginAsync(TokenType.Bot, token);
 await client.StartAsync();
 
