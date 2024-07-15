@@ -62,28 +62,35 @@ public class SlashCommand(BroadcastBoxClient client, CommandRepository commandRe
         var isValidUrl = IsValidUrl(hostUrl, out var validHostUrl);
         if (!isValidUrl)
         {
-            await command.FollowupAsync($"Provided URL `{hostUrl}` is invalid. Please check and try again.");
+            var invalidUrlEmbed = GenerateFailedEmbed($"URL `{hostUrl}` is invalid. Please check and try again.");
+            await command.FollowupAsync(embed: invalidUrlEmbed);
             return;
         }
 
         var hostExists = await queryRepository.HostExistsAsync(validHostUrl!, guildId.Value);
         if (hostExists)
         {
-            await command.FollowupAsync($"Provided URL `{validHostUrl}` already exists.");
+            var hostExistsEmbed = GenerateFailedEmbed($"Host `{validHostUrl}` already exists.");
+            await command.FollowupAsync(embed: hostExistsEmbed);
             return;
         }
 
         var validHost = await client.IsVerifiedBroadcastBoxHostAsync(validHostUrl!);
         if (!validHost)
         {
-            await command.FollowupAsync(
-            $"Failed to add host. Received a non-success response code from `{validHostUrl}/api/status`. Please check and try again.");
+            var invalidHostEmbed =
+                GenerateFailedEmbed(
+                    $"Received a non-success response code from `{validHostUrl}/api/status`. Please check and try again.");
+            await command.FollowupAsync(embed: invalidHostEmbed);
             return;
         }
 
         var host = new Host(validHostUrl!, interval, guildId.Value, command.User.Id);
         await commandRepository.AddHostAsync(host);
-        await command.FollowupAsync($"Success! Added host `{validHostUrl}` with a polling interval of {interval} seconds.");
+        var successEmbed =
+            GenerateSuccessEmbed(
+                $"Added new host `{validHostUrl}` with a polling interval of {interval} seconds.");
+        await command.FollowupAsync(embed: successEmbed);
     }
     
     private static bool IsValidUrl(string url, out string? validUrl)
@@ -115,4 +122,20 @@ public class SlashCommand(BroadcastBoxClient client, CommandRepository commandRe
         validUrl = uri.GetLeftPart(UriPartial.Authority);
         return true;
     }
+
+    private static Embed GenerateFailedEmbed(string description) =>
+        new EmbedBuilder()
+            .WithTitle("Failed")
+            .WithDescription(description)
+            .WithColor(Color.Red)
+            .WithCurrentTimestamp()
+            .Build();
+    
+    private static Embed GenerateSuccessEmbed(string description) =>
+        new EmbedBuilder()
+            .WithTitle("Success")
+            .WithDescription(description)
+            .WithColor(Color.Green)
+            .WithCurrentTimestamp()
+            .Build();
 }
