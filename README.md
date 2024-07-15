@@ -1,4 +1,4 @@
-# MIRA - A BROADCASTBOX DISCORD BOT
+# MIRA - A BroadcastBox Discord Bot
 Mira is a Discord bot for use with the fantastic [BroadcastBox](https://github.com/glimesh/broadcast-box). It allows you to specify which hosts to monitor and then subscribe to different stream keys.
 
 ## Prerequisites
