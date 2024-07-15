@@ -1,9 +1,11 @@
 # MIRA - A BROADCASTBOX DISCORD BOT
 Mira is a Discord bot for use with the fantastic [BroadcastBox](https://github.com/glimesh/broadcast-box). It allows you to specify which hosts to monitor and then subscribe to different stream keys.
 
-
 ## Prerequisites
 Mira requires you to provide a Discord bot token. You can acquire one by visiting the [Discord Applications Portal](https://discord.com/developers/applications/) and creating a new application.
+
+## Add To Server
+Coming soon!
 
 ## Run this locally
 Build and run `Mira` with Docker:
