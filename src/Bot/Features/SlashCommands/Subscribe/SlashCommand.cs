@@ -1,12 +1,13 @@
 using System.Net;
 using Discord;
 using Discord.WebSocket;
+using Microsoft.Extensions.Logging;
 using Mira.Features.SlashCommands.Subscribe.Models;
 using Mira.Features.SlashCommands.Subscribe.Repositories;
 
 namespace Mira.Features.SlashCommands.Subscribe;
 
-public class SlashCommand(QueryRepository queryRepository, CommandRepository commandRepository)
+public class SlashCommand(QueryRepository queryRepository, CommandRepository commandRepository, ILogger<SlashCommand> logger)
     : ISlashCommand, ISelectable
 {
     public string Name => "subscribe";
@@ -28,30 +29,34 @@ public class SlashCommand(QueryRepository queryRepository, CommandRepository com
 
     public async Task RespondAsync(SocketSlashCommand command)
     {
-        var streamKey = command.Data.Options.First(x => x.Name == StreamKeyOptionName).Value.ToString();
-        if (string.IsNullOrWhiteSpace(streamKey))
-        {
-            await command.RespondAsync($"`{streamKey}` is an invalid stream key. Please double check and try again.");
-            return;
-        }
-        
-        // Sanitise the streamKey
-        streamKey = WebUtility.UrlEncode(streamKey);
-
         var guildId = command.GuildId;
         if (guildId is null)
         {
             // Failure message
             return;
         }
+        
+        var streamKey = command.Data.Options.First(x => x.Name == StreamKeyOptionName).Value.ToString();
+        if (string.IsNullOrWhiteSpace(streamKey))
+        {
+            var invalidStreamKeyEmbed =
+                GenerateFailedEmbed($"`{streamKey}` is an invalid stream key. Please double check and try again.");
+            await command.RespondAsync(embed: invalidStreamKeyEmbed, ephemeral: true);
+            return;
+        }
+        
+        // Sanitise the streamKey
+        streamKey = WebUtility.UrlEncode(streamKey);
 
         await command.DeferAsync(ephemeral: true);
 
         var hosts = await queryRepository.GetHostsAsync(guildId.Value);
         if (hosts.Length == 0)
         {
-            await command.FollowupAsync(
-                "No hosts found! Please use the `/add-host` command to add a valid BroadcastBox host before subscribing.");
+            var noHostsEmbed =
+                GenerateFailedEmbed(
+                    "No hosts found! Please use the `/add-host` command to add a valid BroadcastBox host before subscribing.");
+            await command.FollowupAsync(embed: noHostsEmbed);
             return;
         }
 
@@ -73,18 +78,17 @@ public class SlashCommand(QueryRepository queryRepository, CommandRepository com
 
     public async Task RespondAsync(SocketMessageComponent component)
     {
+        var channelId = component.ChannelId;
+        if (channelId is null)
+        {
+            logger.LogCritical("[SLASH-COMMAND][{Name}] Failed to retrieve channelId from SocketMessageComponent. Received: {ChannelId}", Name, channelId);
+            return;
+        }
         
         var streamKey = component.Data.CustomId.Split("-").LastOrDefault();
         if (string.IsNullOrWhiteSpace(streamKey))
         {
-            // Log error
-            return;
-        }
-        
-        var channelId = component.ChannelId;
-        if (channelId is null)
-        {
-            // Failure
+            logger.LogCritical("[SLASH-COMMAND][{Name}] Failed to retrieve value from the streamKey customId. Received: {Key}", Name, streamKey);
             return;
         }
 
@@ -92,21 +96,25 @@ public class SlashCommand(QueryRepository queryRepository, CommandRepository com
 
         if (!int.TryParse(component.Data.Values.FirstOrDefault(), out var hostId))
         {
+            logger.LogCritical("[SLASH-COMMAND][{Name}] Failed to retrieve value from the host option. Received: {Value}", Name, component.Data.Values.FirstOrDefault());
             return;
         }
 
         var host = await queryRepository.GetHostAsync(hostId);
         if (host is null)
         {
-            // Error
+            logger.LogCritical("[SLASH-COMMAND][{Name}] Failed to retrieve the host from the provided Id: {Id}", Name, hostId);
             return;
         }
 
         var keyExists = await queryRepository.HostStreamKeyExistsAsync(hostId, streamKey);
         if (keyExists)
         {
-            await component.FollowupAsync(
-                "This streamkey is already registered for this host. Please use `/list` to see all currently registered keys and hosts.");
+            logger.LogInformation("[SLASH-COMMAND][{Name}] User provided a stream key that already exists for this host. Host: {HostUrl}, Key: {Key}", Name, host.Url, streamKey);
+            var keyExistsEmbed =
+                GenerateFailedEmbed(
+                    "This streamkey is already registered for this host. Please use `/list` to see all currently registered keys and hosts.");
+            await component.FollowupAsync(embed: keyExistsEmbed);
             return;
         }
         
@@ -121,7 +129,8 @@ public class SlashCommand(QueryRepository queryRepository, CommandRepository com
         var success = await commandRepository.AddSubscription(subscription);
         if (!success)
         {
-            await component.FollowupAsync("Failed to add new subscription. Please try again.");
+            var subscriptionFailedEmbed = GenerateFailedEmbed("Unable to add new subscription. Please try again.");
+            await component.FollowupAsync(embed: subscriptionFailedEmbed);
             return;
         }
         
@@ -133,7 +142,25 @@ public class SlashCommand(QueryRepository queryRepository, CommandRepository com
             message.Components = new ComponentBuilder().Build();
         });
 
-        await component.InteractionChannel.SendMessageAsync(
-            $"New subscription added for `{url}`! Notifications will be sent to this channel when the stream goes live.");
+        var successEmbed =
+            GenerateSuccessEmbed(
+                $"New subscription added for `{url}`! \n Notifications will be sent to this channel when the stream goes live.");
+        await component.InteractionChannel.SendMessageAsync(embed: successEmbed);
     }
+    
+    private static Embed GenerateFailedEmbed(string description) =>
+        new EmbedBuilder()
+            .WithTitle("Failed")
+            .WithDescription(description)
+            .WithColor(Color.Red)
+            .WithCurrentTimestamp()
+            .Build();
+    
+    private static Embed GenerateSuccessEmbed(string description) =>
+        new EmbedBuilder()
+            .WithTitle("Success")
+            .WithDescription(description)
+            .WithColor(Color.Green)
+            .WithCurrentTimestamp()
+            .Build();
 }
