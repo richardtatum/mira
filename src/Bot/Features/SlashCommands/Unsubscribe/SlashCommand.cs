@@ -1,10 +1,11 @@
 using Discord;
 using Discord.WebSocket;
+using Microsoft.Extensions.Logging;
 using Mira.Features.SlashCommands.Unsubscribe.Repositories;
 
 namespace Mira.Features.SlashCommands.Unsubscribe;
 
-public class SlashCommand(QueryRepository queryRepository, CommandRepository commandRepository) : ISlashCommand, ISelectable
+public class SlashCommand(QueryRepository queryRepository, CommandRepository commandRepository, ILogger<SlashCommand> logger) : ISlashCommand, ISelectable
 {
     public string Name => "unsubscribe";
     private const string CustomId = "unsubscribe";
@@ -20,20 +21,21 @@ public class SlashCommand(QueryRepository queryRepository, CommandRepository com
         var guildId = command.GuildId;
         if (guildId is null)
         {
-            // Failure message
+            logger.LogCritical("[SLASH-COMMAND][{Name}] Failed to retrieve guildId from SocketSlashCommand. Received: {GuildId}", Name, guildId);
             return;
         }
 
         await command.DeferAsync(ephemeral: true);
         
-        var guildSubscriptions = await queryRepository.GetSubscriptionsAsync(guildId.Value);
-        if (guildSubscriptions.Length == 0)
+        var subscriptions = await queryRepository.GetSubscriptionsAsync(guildId.Value);
+        if (subscriptions.Length == 0)
         {
-            await command.FollowupAsync("No subscriptions found for this server.");
+            var noSubscriptionsEmbed = GenerateFailedEmbed("No subscriptions found for this server.");
+            await command.FollowupAsync(embed: noSubscriptionsEmbed);
             return;
         }
         
-        var unsubscribeOptions = guildSubscriptions
+        var unsubscribeOptions = subscriptions
             .Select(subscription => new SelectMenuOptionBuilder(subscription.Url, subscription.Id.ToString()))
             .ToList();
 
@@ -48,15 +50,16 @@ public class SlashCommand(QueryRepository queryRepository, CommandRepository com
 
     public async Task RespondAsync(SocketMessageComponent component)
     {
-        if (!int.TryParse(component.Data.Values.FirstOrDefault(), out var subscriptionId))
-        {
-            return;
-        }
-        
         var guildId = component.GuildId;
         if (guildId is null)
         {
-            // Failure message
+            logger.LogCritical("[SLASH-COMMAND][{Name}] Failed to retrieve guildId from SocketMessageComponent. Received: {GuildId}", Name, guildId);
+            return;
+        }
+        
+        if (!int.TryParse(component.Data.Values.FirstOrDefault(), out var subscriptionId))
+        {
+            logger.LogCritical("[SLASH-COMMAND][{Name}] Failed to retrieve value of subscriptionId from options. Value: {Value}", Name, component.Data.Values.FirstOrDefault());
             return;
         }
         
@@ -66,14 +69,20 @@ public class SlashCommand(QueryRepository queryRepository, CommandRepository com
         var subscription = await queryRepository.GetSubscriptionAsync(subscriptionId, guildId.Value);
         if (subscription is null)
         {
-            // Failure Message
+            logger.LogCritical("[SLASH-COMMAND][{Name}] Failed to retrieve the subscription from the provided subscriptionId: {Id}", Name, subscriptionId);
+            var subscriptionNullEmbed =
+                GenerateFailedEmbed("Failed to retrieve the provided subscription. Please try again.");
+            await component.FollowupAsync(embed: subscriptionNullEmbed);
             return;
         }
 
         var success = await commandRepository.DeleteSubscriptionAsync(subscriptionId);
         if (!success)
         {
-            // Log and failure
+            logger.LogCritical("[SLASH-COMMAND][{Name}] Failed to delete the subscription: {Url}", Name, subscription.Url);
+            var subscriptionNullEmbed =
+                GenerateFailedEmbed("Failed to delete the provided subscription. Please try again.");
+            await component.FollowupAsync(embed: subscriptionNullEmbed);
             return;
         }
 
@@ -83,7 +92,25 @@ public class SlashCommand(QueryRepository queryRepository, CommandRepository com
             message.Components = new ComponentBuilder().Build();
         });
 
-        await component.InteractionChannel.SendMessageAsync(
-            $"Unsubscribed from `{subscription.Url}`. Notifications will no longer be sent for this stream.");
+        var successEmbed =
+            GenerateSuccessEmbed(
+                $"Unsubscribed from `{subscription.Url}`. Notifications will no longer be sent for this stream.");
+        await component.InteractionChannel.SendMessageAsync(embed: successEmbed);
     }
+    
+    private static Embed GenerateFailedEmbed(string description) =>
+        new EmbedBuilder()
+            .WithTitle("Failed")
+            .WithDescription(description)
+            .WithColor(Color.Red)
+            .WithCurrentTimestamp()
+            .Build();
+    
+    private static Embed GenerateSuccessEmbed(string description) =>
+        new EmbedBuilder()
+            .WithTitle("Success")
+            .WithDescription(description)
+            .WithColor(Color.Green)
+            .WithCurrentTimestamp()
+            .Build();
 }
