@@ -23,7 +23,7 @@ public class SlashCommand(QueryRepository queryRepository) : ISlashCommand
             return;
         }
 
-        await command.DeferAsync();
+        await command.DeferAsync(ephemeral: true);
 
         var subscriptions = await queryRepository.GetSubscriptionsAsync(guildId.Value);
         if (subscriptions.Length == 0)
