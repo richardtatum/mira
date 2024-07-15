@@ -21,7 +21,7 @@ public class PollingService(
         var subscribedHosts = new Dictionary<string, CancellationTokenSource>();
         do
         {
-            logger.LogInformation("[HOST-CHECKER] Checking for new hosts...");
+            logger.LogInformation("[HOST-POLLING] Checking for new hosts...");
             var hosts = await query.GetHostsAsync();
             foreach (var host in hosts)
             {
@@ -31,7 +31,7 @@ public class PollingService(
                 }
 
                 logger.LogInformation(
-                    "[HOST-CHECKER] New host found: {Host}. Creating subscription. Interval: {Seconds}s", host.Url,
+                    "[HOST-POLLING] New host found: {Host}. Creating subscription. Interval: {Seconds}s", host.Url,
                     host.PollIntervalSeconds);
 
                 // Create a child of the provided cancellation token
@@ -60,12 +60,12 @@ public class PollingService(
             var subscriptions = await query.GetSubscriptionsAsync(host.Url);
             if (subscriptions.Length == 0)
             {
-                logger.LogInformation("[KEY-CHECKER][{Host}] No key subscriptions found. Skipping.", host.Url);
+                logger.LogInformation("[KEY-POLLING][{Host}] No key subscriptions found. Skipping.", host.Url);
                 continue;
             }
 
             logger.LogInformation(
-                "[KEY-CHECKER][{Host}] {Subscriptions} key subscription(s) found. Checking for stream updates.",
+                "[KEY-POLLING][{Host}] {Subscriptions} key subscription(s) found. Checking for stream updates.",
                 host.Url, subscriptions.Length);
             await service.UpdateStreamsAsync(host, subscriptions);
         } while (await timer.WaitForNextTickAsync(stoppingToken));
@@ -77,7 +77,7 @@ public class PollingService(
         var cancellationTasks = staleHosts.Select(entry =>
         {
             var (url, cancellationSource) = entry;
-            logger.LogInformation("[HOST-CHECKER][{Host}] Host no longer registered in the database. Cancelling.",
+            logger.LogInformation("[HOST-POLLING][{Host}] Host no longer registered in the database. Cancelling.",
                 url);
             return cancellationSource.CancelAsync();
         });
