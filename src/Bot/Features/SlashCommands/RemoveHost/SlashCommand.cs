@@ -88,7 +88,7 @@ public class SlashCommand(QueryRepository queryRepository, CommandRepository com
         });
 
         await component.InteractionChannel.SendMessageAsync(
-            $"Host `{host.Url}` has been deleted along with all relevant subscriptions."
+            $"Host `{host.Url}` has been removed along with all relevant subscriptions."
         );
     }
 }
