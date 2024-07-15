@@ -4,7 +4,7 @@ Mira is a Discord bot for use with the fantastic [Broadcast Box](https://github.
 ## Prerequisites
 Mira requires you to provide a Discord bot token. You can acquire one by visiting the [Discord Applications Portal](https://discord.com/developers/applications/) and creating a new application.
 
-## Add To Server
+## Add to server
 Coming soon!
 
 ## Run this locally
