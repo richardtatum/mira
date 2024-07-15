@@ -14,4 +14,5 @@ RUN dotnet publish "Bot.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAp
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
+RUN mkdir -p db # the db gets stored here at /app/db
 ENTRYPOINT ["dotnet", "Bot.dll"]

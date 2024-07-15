@@ -23,6 +23,6 @@ dockerfile = "Dockerfile"
   cpus = 1
 
 [mounts]
-source = "sqlite"
-destination = "/Data"
+source = "mira_db"
+destination = "/app/db"
 processes = ["app"]
