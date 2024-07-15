@@ -1,10 +1,11 @@
 using Discord;
 using Discord.WebSocket;
+using Microsoft.Extensions.Logging;
 using Mira.Features.SlashCommands.List.Repositories;
 
 namespace Mira.Features.SlashCommands.List;
 
-public class SlashCommand(QueryRepository queryRepository) : ISlashCommand
+public class SlashCommand(QueryRepository queryRepository, ILogger<SlashCommand> logger) : ISlashCommand
 {
     public string Name => "list";
 
@@ -19,7 +20,7 @@ public class SlashCommand(QueryRepository queryRepository) : ISlashCommand
         var guildId = command.GuildId;
         if (guildId is null)
         {
-            // Failure message
+            logger.LogCritical("[SLASH-COMMAND][{Name}] Failed to retrieve guildId from SocketSlashCommand. Received: {GuildId}", Name, guildId);
             return;
         }
 
