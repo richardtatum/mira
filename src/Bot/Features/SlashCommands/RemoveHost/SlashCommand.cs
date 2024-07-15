@@ -30,7 +30,8 @@ public class SlashCommand(QueryRepository queryRepository, CommandRepository com
         var hosts = await queryRepository.GetHostsAsync(guildId.Value);
         if (hosts.Length == 0)
         {
-            await command.FollowupAsync("No hosts found for this server.");
+            var noHostsEmbed = GenerateFailedEmbed("No hosts found for this server.");
+            await command.FollowupAsync(embed: noHostsEmbed);
             return;
         }
 
