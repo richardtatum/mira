@@ -2,7 +2,6 @@
 using Discord.WebSocket;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Mira;
 using Mira.Data;
@@ -14,7 +13,10 @@ var host = Host.CreateDefaultBuilder()
     .ConfigureServices((_, services) =>
     {
         services.AddScoped<LoggingService>();
-        services.TryAddScoped<DiscordSocketClient>();
+        services.AddSingleton(new DiscordSocketClient(new DiscordSocketConfig
+        {
+            GatewayIntents = GatewayIntents.Guilds
+        }));
         services.AddSingleton<DbContext>();
 
         services.AddHttpClient();
