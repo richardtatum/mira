@@ -22,14 +22,20 @@ public class StreamStatusService(
     {
         if (subscriptions.Length == 0)
         {
-            logger.LogInformation("[NOTIFICATION-SERVICE][{Host}] No subscriptions provided. Skipping.", host.Url);
+            logger.LogInformation("[STATUS-SERVICE][{Host}] No subscriptions provided. Skipping.", host.Url);
             return;
         }
 
         var currentLiveStreams = await GetSubscribedLiveStreamsAsync(host, subscriptions);
         var existingLiveStreams = await query.GetLiveStreamsAsync(subscriptions.Select(x => x.Id));
         var streams = GenerateStreamOverviews(currentLiveStreams, existingLiveStreams);
+        if (!streams.Any())
+        {
+            logger.LogInformation("[STATUS-SERVICE][{Host}] No stream updates found. Skipping.", host.Url);
+            return;
+        }
 
+        logger.LogInformation("[STATUS-SERVICE][{Host}] {Count} update(s) found. Preparing messages.", host.Url, streams.Count());
         var messageTasks = streams.Select(async stream =>
         {
             var messageId = await SendMessageAsync(stream);
@@ -92,7 +98,7 @@ public class StreamStatusService(
     {
         if (subscriptions.Length == 0)
         {
-            logger.LogInformation("[NOTIFICATION-SERVICE][{Host}] No subscriptions provided. Skipping.", host.Url);
+            logger.LogInformation("[STATUS-SERVICE][{Host}] No subscriptions provided. Skipping.", host.Url);
             return [];
         }
 
