@@ -32,7 +32,7 @@ public class SlashCommand(QueryRepository queryRepository, CommandRepository com
         var guildId = command.GuildId;
         if (guildId is null)
         {
-            // Failure message
+            logger.LogCritical("[SLASH-COMMAND][{Name}] Failed to retrieve guildId from SocketSlashCommand. Received: {GuildId}", Name, guildId);
             return;
         }
         
