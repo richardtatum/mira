@@ -38,6 +38,14 @@ The `list` command provides a list of all registered hosts and their subscribed 
 ### /remove-host
 The `remove-host` command allows a user to choose a host to remove, along with any relevant subscriptions.
 
+## Todo
+There are still many things to do before this can be considered complete, including but not limited to:
+- Add a hosted version that can be added to any server with a simple click
+- Add support for restricting access to the add and remove commands
+- Add support for retrieving the last sent frame and using it as the thumbnail for the stream
+- Add tests
+- Various improvements to the layout of the code
+
 ## References
 - [Discord.NET](https://docs.discordnet.dev/index.html) 
 - [Broadcast Box](https://github.com/glimesh/broadcast-box)
