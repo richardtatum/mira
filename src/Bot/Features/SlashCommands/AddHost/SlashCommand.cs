@@ -1,11 +1,12 @@
 using Discord;
 using Discord.WebSocket;
+using Microsoft.Extensions.Logging;
 using Mira.Features.SlashCommands.AddHost.Models;
 using Mira.Features.SlashCommands.AddHost.Repositories;
 
 namespace Mira.Features.SlashCommands.AddHost;
 
-public class SlashCommand(BroadcastBoxClient client, CommandRepository commandRepository, QueryRepository queryRepository) : ISlashCommand
+public class SlashCommand(BroadcastBoxClient client, CommandRepository commandRepository, QueryRepository queryRepository, ILogger<SlashCommand> logger) : ISlashCommand
 {
     public string Name => "add-host";
     private const string HostOptionName = "host";
@@ -37,14 +38,14 @@ public class SlashCommand(BroadcastBoxClient client, CommandRepository commandRe
         var guildId = command.GuildId;
         if (guildId is null)
         {
-            // Return failure message
+            logger.LogCritical("[SLASH-COMMAND][{Name}] Failed to retrieve guildId from SocketSlashCommand. Received: {GuildId}", Name, guildId);
             return;
         }
 
         var hostUrl = command.Data.Options.GetValue<string>(HostOptionName);
         if (string.IsNullOrWhiteSpace(hostUrl))
         {
-            // Return failure message
+            logger.LogCritical("[SLASH-COMMAND][{Name}] Failed to retrieve the value from the host option. Received: {HostUrl}", Name, hostUrl);
             return;
         }
 
@@ -53,7 +54,8 @@ public class SlashCommand(BroadcastBoxClient client, CommandRepository commandRe
         var interval = (int)command.Data.Options.GetValue<double>(PollIntervalOptionName);
         if (interval == default)
         {
-            // Return failure message
+            // TODO: Log the originally retrieve value here, before cast
+            logger.LogCritical("[SLASH-COMMAND][{Name}] Failed to retrieve the value from the interval option. Received: {interval}", Name, interval);
             return;
         }
         
@@ -62,6 +64,7 @@ public class SlashCommand(BroadcastBoxClient client, CommandRepository commandRe
         var isValidUrl = IsValidUrl(hostUrl, out var validHostUrl);
         if (!isValidUrl)
         {
+            logger.LogInformation("[SLASH-COMMAND][{Name}] User provided invalid url: {Url}", Name, hostUrl);
             var invalidUrlEmbed = GenerateFailedEmbed($"URL `{hostUrl}` is invalid. Please check and try again.");
             await command.FollowupAsync(embed: invalidUrlEmbed);
             return;
@@ -70,6 +73,7 @@ public class SlashCommand(BroadcastBoxClient client, CommandRepository commandRe
         var hostExists = await queryRepository.HostExistsAsync(validHostUrl!, guildId.Value);
         if (hostExists)
         {
+            logger.LogInformation("[SLASH-COMMAND][{Name}] User provided url for host that already exists: {Url}", Name, hostUrl);
             var hostExistsEmbed = GenerateFailedEmbed($"Host `{validHostUrl}` already exists.");
             await command.FollowupAsync(embed: hostExistsEmbed);
             return;
@@ -78,6 +82,7 @@ public class SlashCommand(BroadcastBoxClient client, CommandRepository commandRe
         var validHost = await client.IsVerifiedBroadcastBoxHostAsync(validHostUrl!);
         if (!validHost)
         {
+            logger.LogInformation("[SLASH-COMMAND][{Name}] User provided url for host that we were unable to contact: {Url}", Name, hostUrl);
             var invalidHostEmbed =
                 GenerateFailedEmbed(
                     $"Received a non-success response code from `{validHostUrl}/api/status`. Please check and try again.");
