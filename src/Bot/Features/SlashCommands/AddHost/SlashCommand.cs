@@ -9,7 +9,7 @@ namespace Mira.Features.SlashCommands.AddHost;
 public class SlashCommand(BroadcastBoxClient client, CommandRepository commandRepository, QueryRepository queryRepository, ILogger<SlashCommand> logger) : ISlashCommand
 {
     public string Name => "add-host";
-    private const string HostOptionName = "host";
+    private const string HostOptionName = "url";
     private const string PollIntervalOptionName = "poll-interval";
 
     public ApplicationCommandProperties BuildCommand() =>
