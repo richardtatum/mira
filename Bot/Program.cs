@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
+using Mira;
 using Mira.Data;
 using Mira.Features.Messaging;
 using Mira.Features.Polling;
@@ -12,8 +13,10 @@ using Mira.Features.SlashCommands;
 var host = Host.CreateDefaultBuilder()
     .ConfigureServices((_, services) =>
     {
+        services.AddScoped<LoggingService>();
         services.TryAddScoped<DiscordSocketClient>();
         services.AddSingleton<DbContext>();
+
         services.AddHttpClient();
         services.AddSlashCommands();
         services.AddPollingService();
@@ -36,23 +39,19 @@ host.Services
 
 var configuration = host.Services.GetRequiredService<IConfiguration>();
 var client = host.Services.GetRequiredService<DiscordSocketClient>();
-var slashCommandBuilder = host.Services.GetRequiredService<Builder>();
-var slashCommandHandler = host.Services.GetRequiredService<Handler>();
+var commandBuilder = host.Services.GetRequiredService<Builder>();
+var commandHandler = host.Services.GetRequiredService<Handler>();
+var loggingService = host.Services.GetRequiredService<LoggingService>();
 
 var token = configuration.GetValue<string>("Discord:Token");
 await client.LoginAsync(TokenType.Bot, token);
 await client.StartAsync();
 
-//TODO: Update to logging service
-client.Log += message =>
-{
-    Console.WriteLine(message);
-    return Task.CompletedTask;
-};
-client.Ready += slashCommandBuilder.OnReadyAsync;
+client.Log += loggingService.LogAsync;
+client.Ready += commandBuilder.OnReadyAsync;
 client.Ready += () => host.StartAsync();
-client.SlashCommandExecuted += slashCommandHandler.HandleCommandExecutedAsync;
-client.SelectMenuExecuted += slashCommandHandler.HandleSelectMenuExecutedAsync;
+client.SlashCommandExecuted += commandHandler.HandleCommandExecutedAsync;
+client.SelectMenuExecuted += commandHandler.HandleSelectMenuExecutedAsync;
 
 try
 {
