@@ -1,0 +1,28 @@
+# fly.toml app configuration file generated for mira on 2024-07-15T16:32:15+01:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'mira'
+primary_region = 'lhr'
+
+[build]
+dockerfile = "Dockerfile"
+
+[[services]]
+  internal_port = 8080
+  protocol = "tcp"
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ['app']
+
+[[vm]]
+  memory = '512mb'
+  cpu_kind = 'shared'
+  cpus = 1
+
+[mounts]
+source = "sqlite"
+destination = "/Data"
+processes = ["app"]

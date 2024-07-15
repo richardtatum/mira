@@ -33,6 +33,9 @@
         <Content Include="..\..\Dockerfile">
             <Link>Dockerfile</Link>
         </Content>
+        <Content Include="..\..\fly.toml">
+          <Link>fly.toml</Link>
+        </Content>
     </ItemGroup>
 
 </Project>
