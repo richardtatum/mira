@@ -6,7 +6,7 @@ public class KeySummary
     public long FirstSeenEpoch { get; set; }
     public VideoStream[] VideoStreams { get; set; } = [];
     public Viewer[] WhepSessions { get; set; } = [];
-    public bool IsLive => VideoStreams.Any(stream => stream.SecondsSinceLastFrame < 30);
+    public bool IsLive => VideoStreams.Any(stream => stream.SecondsSinceLastFrame < 15);
     public int CurrentViewers => WhepSessions.Length;
 }
 
