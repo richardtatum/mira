@@ -1,6 +1,5 @@
 namespace Mira.Features.SlashCommands.Subscribe.Models;
 
-// TODO: Remove null references where possible!
 public class Subscription : IEquatable<Subscription>
 {
     public int? Id { get; set; }

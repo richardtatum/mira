@@ -8,7 +8,6 @@ using Host = Mira.Features.Polling.Models.Host;
 namespace Mira.Features.Polling;
 
 // TODO: Update to use the stream start time from the endpoint, rather than UTCNOW
-// TODO: Simplify the below if possible
 // TODO: Separate/uncouple the messaging service from the polling/stream updates?
 public class StreamStatusService(
     BroadcastBoxClient client,

@@ -14,7 +14,6 @@ var host = Host.CreateDefaultBuilder()
     {
         services.TryAddScoped<DiscordSocketClient>();
         services.AddSingleton<DbContext>();
-
         services.AddHttpClient();
         services.AddSlashCommands();
         services.AddPollingService();
@@ -40,7 +39,6 @@ var client = host.Services.GetRequiredService<DiscordSocketClient>();
 var slashCommandBuilder = host.Services.GetRequiredService<Builder>();
 var slashCommandHandler = host.Services.GetRequiredService<Handler>();
 
-// TODO: Dispose of this development token
 var token = configuration.GetValue<string>("Discord:Token");
 await client.LoginAsync(TokenType.Bot, token);
 await client.StartAsync();
