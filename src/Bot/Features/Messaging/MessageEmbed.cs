@@ -6,7 +6,7 @@ public static class MessageEmbed
 {
     public static Embed Live(string url, int viewers, TimeSpan duration)
         => new EmbedBuilder()
-            .WithTitle("Stream is online")
+            .WithTitle("Stream Online")
             .WithDescription($"{url} is currently live!")
             .WithColor(Color.Green)
             .WithFields(
@@ -21,7 +21,7 @@ public static class MessageEmbed
     // Started, ended, duration, etc
     public static Embed Offline(string url, int viewers, TimeSpan duration)
         => new EmbedBuilder()
-            .WithTitle("Stream is offline")            
+            .WithTitle("Stream Offline")            
             .WithDescription($"{url} is now offline.")
             .WithColor(Color.Red)
             .WithFields(
