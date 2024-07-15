@@ -1,5 +1,4 @@
 using Discord.WebSocket;
-using Mira.Interfaces;
 
 namespace Mira.Features.SlashCommands;
 

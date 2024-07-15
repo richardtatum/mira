@@ -1,6 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
 using Mira.Features.SlashCommands.Unsubscribe.Repositories;
-using Mira.Interfaces;
 
 namespace Mira.Features.SlashCommands.Unsubscribe;
 

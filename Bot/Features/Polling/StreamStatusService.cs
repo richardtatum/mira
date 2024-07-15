@@ -116,7 +116,7 @@ public class StreamStatusService(
             .ToArray();
     }
 
-    internal Task<ulong?> SendMessageAsync(StreamOverview stream) => stream.MessageId is not null
+    private Task<ulong?> SendMessageAsync(StreamOverview stream) => stream.MessageId is not null
         ? messageService.ModifyAsync(stream.MessageId.Value, stream.ChannelId, stream.Status,
             stream.Url,
             stream.ViewerCount,

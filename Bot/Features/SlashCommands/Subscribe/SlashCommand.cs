@@ -3,7 +3,6 @@ using Discord;
 using Discord.WebSocket;
 using Mira.Features.SlashCommands.Subscribe.Models;
 using Mira.Features.SlashCommands.Subscribe.Repositories;
-using Mira.Interfaces;
 
 namespace Mira.Features.SlashCommands.Subscribe;
 

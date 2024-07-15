@@ -1,7 +1,7 @@
 using Discord;
 using Discord.WebSocket;
 
-namespace Mira.Interfaces;
+namespace Mira.Features.SlashCommands;
 
 public interface ISlashCommand
 {

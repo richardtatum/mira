@@ -1,7 +1,6 @@
 using Discord;
 using Discord.WebSocket;
 using Mira.Features.SlashCommands.List.Repositories;
-using Mira.Interfaces;
 
 namespace Mira.Features.SlashCommands.List;
 

@@ -1,8 +1,6 @@
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Mira.Features.SlashCommands.AddHost.Options;
 using Mira.Features.SlashCommands.AddHost.Repositories;
-using Mira.Interfaces;
 
 namespace Mira.Features.SlashCommands.AddHost;
 

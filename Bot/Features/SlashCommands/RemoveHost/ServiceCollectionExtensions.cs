@@ -1,6 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
 using Mira.Features.SlashCommands.RemoveHost.Repositories;
-using Mira.Interfaces;
 
 namespace Mira.Features.SlashCommands.RemoveHost;
 

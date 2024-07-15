@@ -3,7 +3,6 @@ using Discord.WebSocket;
 using Mira.Extensions;
 using Mira.Features.SlashCommands.AddHost.Models;
 using Mira.Features.SlashCommands.AddHost.Repositories;
-using Mira.Interfaces;
 
 namespace Mira.Features.SlashCommands.AddHost;
 
