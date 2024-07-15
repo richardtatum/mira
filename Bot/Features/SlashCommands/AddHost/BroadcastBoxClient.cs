@@ -1,8 +1,13 @@
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Mira.Features.SlashCommands.AddHost.Options;
 
 namespace Mira.Features.SlashCommands.AddHost;
 
-public class BroadcastBoxClient(IHttpClientFactory httpClientFactory, ILogger<BroadcastBoxClient> logger)
+public class BroadcastBoxClient(
+    IHttpClientFactory httpClientFactory,
+    ILogger<BroadcastBoxClient> logger,
+    IOptions<PollingOptions> options)
 {
     public async Task<bool> IsVerifiedBroadcastBoxHostAsync(string hostUrl)
     {
@@ -12,9 +17,9 @@ public class BroadcastBoxClient(IHttpClientFactory httpClientFactory, ILogger<Br
         }
 
         var client = httpClientFactory.CreateClient(hostUrl);
+
         // Set a timeout in case the URL can't be contacted at all
-        // TODO: Load from IOptions
-        client.Timeout = TimeSpan.FromSeconds(1);
+        client.Timeout = TimeSpan.FromSeconds(options.Value.NewHostValidationTimeoutSeconds);
 
         try
         {

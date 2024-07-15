@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using Mira.Features.Polling.Options;
 using Mira.Features.Polling.Repositories;
 
 namespace Mira.Features.Polling;
@@ -12,5 +13,9 @@ public static class ServiceCollectionExtensions
         services.AddScoped<BroadcastBoxClient>();
         services.AddScoped<QueryRepository>();
         services.AddScoped<CommandRepository>();
+        
+        services
+            .AddOptions<PollingOptions>()
+            .BindConfiguration(nameof(PollingOptions));
     }
 }

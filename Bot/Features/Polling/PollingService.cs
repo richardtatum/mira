@@ -1,5 +1,7 @@
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Mira.Features.Polling.Options;
 using Mira.Features.Polling.Repositories;
 using Host = Mira.Features.Polling.Models.Host;
 
@@ -8,15 +10,13 @@ namespace Mira.Features.Polling;
 public class PollingService(
     QueryRepository query,
     StreamStatusService service,
-    ILogger<PollingService> logger)
+    ILogger<PollingService> logger,
+    IOptions<PollingOptions> options)
     : BackgroundService
 {
-    // TODO: Load from IOptions
-    private TimeSpan HostPollingInterval => TimeSpan.FromSeconds(60);
-
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        using var timer = new PeriodicTimer(HostPollingInterval);
+        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(options.Value.NewHostIntervalSeconds));
 
         var subscribedHosts = new Dictionary<string, CancellationTokenSource>();
         do
