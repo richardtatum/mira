@@ -1,6 +1,5 @@
 using Discord;
 using Discord.WebSocket;
-using Mira.Extensions;
 using Mira.Features.SlashCommands.AddHost.Models;
 using Mira.Features.SlashCommands.AddHost.Repositories;
 

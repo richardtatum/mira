@@ -1,39 +1,24 @@
-using System.Text.Json;
 using Discord.Net;
 using Discord.WebSocket;
+using Microsoft.Extensions.Logging;
 
 namespace Mira.Features.SlashCommands;
 
-public class Builder
+public class Builder(DiscordSocketClient client, IEnumerable<ISlashCommand> commands, ILogger<Builder> logger)
 {
-    private readonly DiscordSocketClient _client;
-    private readonly IEnumerable<ISlashCommand> _commands;
-
-    public Builder(DiscordSocketClient client, IEnumerable<ISlashCommand> commands)
-    {
-        _client = client;
-        _commands = commands;
-    }
-
     public async Task OnReadyAsync()
     {
         try
         {
-            var commandProperties = _commands
+            var commandProperties = commands
                 .Select(command => command.BuildCommand())
                 .ToArray();
 
-            await _client.BulkOverwriteGlobalApplicationCommandsAsync(commandProperties);
+            await client.BulkOverwriteGlobalApplicationCommandsAsync(commandProperties);
         }
         catch (HttpException ex)
         {
-            // TODO: Update to use logger
-            var json = JsonSerializer.Serialize(ex.Errors, new JsonSerializerOptions
-            {
-                WriteIndented = true
-            });
-
-            Console.WriteLine(json);
+            logger.LogError("[COMMAND-BUILDER] Failed to build commands. Ex: {Exception} ", ex);
         }
 
     }

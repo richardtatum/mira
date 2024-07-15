@@ -1,6 +1,6 @@
 using Discord.WebSocket;
 
-namespace Mira.Extensions;
+namespace Mira.Features.SlashCommands;
 
 public static class ReadOnlyCollectionExtensions
 {
