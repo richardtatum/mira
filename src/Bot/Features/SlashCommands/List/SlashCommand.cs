@@ -28,7 +28,8 @@ public class SlashCommand(QueryRepository queryRepository) : ISlashCommand
         var subscriptions = await queryRepository.GetSubscriptionsAsync(guildId.Value);
         if (subscriptions.Length == 0)
         {
-            await command.FollowupAsync("No subscriptions or hosts found for this server.");
+            var noHostEmbed = GenerateEmbed("No hosts or subscriptions found. Please use `/add-host` to register a new one.");
+            await command.FollowupAsync(embed: noHostEmbed);
             return;
         }
 
@@ -45,14 +46,24 @@ public class SlashCommand(QueryRepository queryRepository) : ISlashCommand
             })
             .ToArray();
 
+        var embed = GenerateEmbed("Below are the hosts and associated stream keys subscribed to from this server:", fields);
+        await command.FollowupAsync(embed: embed);
+    }
+
+    private static Embed GenerateEmbed(string description, IEnumerable<EmbedFieldBuilder>? fields = null)
+    {
         var embed = new EmbedBuilder()
             .WithTitle("Hosts & Subscriptions")
-            .WithDescription("Below are the hosts and associated stream keys subscribed to from this server:")
+            .WithDescription(description)
             .WithColor(Color.Blue)
-            .WithFields(fields)
-            .WithCurrentTimestamp()
-            .Build();
+            .WithCurrentTimestamp();
 
-        await command.FollowupAsync(embed: embed);
+        var embedFieldBuilders = fields as EmbedFieldBuilder[] ?? fields?.ToArray();
+        if (embedFieldBuilders is not null && embedFieldBuilders.Length != 0)
+        {
+            embed.WithFields(embedFieldBuilders);
+        }
+
+        return embed.Build();
     }
 }
