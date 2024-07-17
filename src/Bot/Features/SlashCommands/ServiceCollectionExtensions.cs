@@ -19,7 +19,7 @@ public static class ServiceCollectionExtensions
             .AddUnsubscribeSlashCommand()
             .AddListSlashCommand();
 
-        services.TryAddScoped<Builder>();
-        services.TryAddScoped<Handler>();
+        services.TryAddTransient<Builder>();
+        services.TryAddTransient<Handler>();
     }
 }

@@ -7,8 +7,8 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddListSlashCommand(this IServiceCollection services)
     {
-        services.AddScoped<ISlashCommand, SlashCommand>();
-        services.AddScoped<QueryRepository>();
+        services.AddTransient<ISlashCommand, SlashCommand>();
+        services.AddTransient<QueryRepository>();
 
         return services;
     }

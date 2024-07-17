@@ -7,10 +7,10 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddUnsubscribeSlashCommand(this IServiceCollection services)
     {
-        services.AddScoped<CommandRepository>();
-        services.AddScoped<QueryRepository>();
-        services.AddScoped<ISlashCommand, SlashCommand>();
-        services.AddScoped<ISelectable, SlashCommand>();
+        services.AddTransient<CommandRepository>();
+        services.AddTransient<QueryRepository>();
+        services.AddTransient<ISlashCommand, SlashCommand>();
+        services.AddTransient<ISelectable, SlashCommand>();
 
         return services;
     }
