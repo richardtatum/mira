@@ -6,6 +6,6 @@ public static class ServiceCollectionExtensions
 {
     public static void AddMessagingService(this IServiceCollection services)
     {
-        services.AddScoped<IMessageService, MessageService>();
+        services.AddTransient<IMessageService, MessageService>();
     }
 }

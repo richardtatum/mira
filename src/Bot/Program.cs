@@ -12,12 +12,12 @@ using Mira.Features.SlashCommands;
 var host = Host.CreateDefaultBuilder()
     .ConfigureServices((_, services) =>
     {
-        services.AddScoped<LoggingService>();
+        services.AddSingleton<LoggingService>();
+        services.AddSingleton<DbContext>();
         services.AddSingleton(new DiscordSocketClient(new DiscordSocketConfig
         {
             GatewayIntents = GatewayIntents.Guilds
         }));
-        services.AddSingleton<DbContext>();
 
         services.AddHttpClient();
         services.AddSlashCommands();

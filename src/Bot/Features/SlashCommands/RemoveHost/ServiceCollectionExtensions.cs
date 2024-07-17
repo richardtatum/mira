@@ -7,10 +7,10 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddRemoveHostCommand(this IServiceCollection services)
     {
-        services.AddScoped<ISlashCommand, SlashCommand>();
-        services.AddScoped<ISelectable, SlashCommand>();
-        services.AddScoped<QueryRepository>();
-        services.AddScoped<CommandRepository>();
+        services.AddTransient<ISlashCommand, SlashCommand>();
+        services.AddTransient<ISelectable, SlashCommand>();
+        services.AddTransient<QueryRepository>();
+        services.AddTransient<CommandRepository>();
 
         return services;
     }
