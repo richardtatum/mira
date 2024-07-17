@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Mira;
 using Mira.Data;
+using Mira.Features.Cleanup;
 using Mira.Features.Messaging;
 using Mira.Features.Polling;
 using Mira.Features.SlashCommands;
@@ -23,6 +24,8 @@ var host = Host.CreateDefaultBuilder()
         services.AddSlashCommands();
         services.AddPollingService();
         services.AddMessagingService();
+        services.AddCleanupServices();
+        ;
     })
     .Build();
 
@@ -44,6 +47,9 @@ var client = host.Services.GetRequiredService<DiscordSocketClient>();
 var commandBuilder = host.Services.GetRequiredService<Builder>();
 var commandHandler = host.Services.GetRequiredService<Handler>();
 var loggingService = host.Services.GetRequiredService<LoggingService>();
+var guildCleanup = host.Services.GetRequiredService<ICleanupService<SocketGuild>>();
+var channelCleanup = host.Services.GetRequiredService<ICleanupService<SocketChannel>>();
+
 
 var token = configuration.GetValue<string>("Discord:Token");
 await client.LoginAsync(TokenType.Bot, token);
@@ -54,6 +60,9 @@ client.Ready += commandBuilder.OnReadyAsync;
 client.Ready += () => host.StartAsync();
 client.SlashCommandExecuted += commandHandler.HandleCommandExecutedAsync;
 client.SelectMenuExecuted += commandHandler.HandleSelectMenuExecutedAsync;
+
+client.LeftGuild += guildCleanup.ExecuteAsync;
+client.ChannelDestroyed += channelCleanup.ExecuteAsync;
 
 try
 {
