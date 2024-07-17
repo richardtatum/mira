@@ -4,9 +4,9 @@ using Microsoft.Extensions.Logging;
 
 namespace Mira;
 
-public class LoggingService(ILogger<LoggingService> logger)
+internal class LoggingService(ILogger<Program> logger)
 {
-    public Task LogAsync(LogMessage message)
+    internal Task LogAsync(LogMessage message)
     {
         if (message.Exception is CommandException cmdException)
         {
