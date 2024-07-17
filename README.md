@@ -1,11 +1,17 @@
 # MIRA - A Broadcast Box Discord Bot
+
+![Mira Icon](/assets/Mira.png)
+
 Mira is a Discord bot for use with the fantastic [Broadcast Box](https://github.com/glimesh/broadcast-box). It allows you to specify which hosts to monitor and then subscribe to different stream keys.
 
 ## Prerequisites
 Mira requires you to provide a Discord bot token. You can acquire one by visiting the [Discord Applications Portal](https://discord.com/developers/applications/) and creating a new application.
 
 ## Add to server
-Coming soon!
+You can add Mira to your server with [this link](https://discord.com/oauth2/authorize?client_id=1250447229572087808).
+
+> [!WARNING]  
+> Mira is still in active development. Breaking changes and data wipes are likely. Use at your own risk! 
 
 ## Run this locally
 Build and run `Mira` with Docker:
@@ -40,11 +46,13 @@ The `remove-host` command allows a user to choose a host to remove, along with a
 
 ## Todo
 There are still many things to do before this can be considered complete, including but not limited to:
-- Add a hosted version that can be added to any server with a simple click
+- ~~Add a hosted version that can be added to any server with a simple click~~
 - Add support for restricting access to the add and remove commands
-- Cleanup the current response embeds
 - Add support for retrieving the last sent frame and using it as the thumbnail for the stream
+- Add regular backups
 - Add tests
+- Cleanup the current response embeds
+- Improve the development experience
 - Various improvements to the layout of the code
 
 ## References
