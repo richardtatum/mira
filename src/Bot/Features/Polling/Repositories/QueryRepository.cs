@@ -35,6 +35,46 @@ public class QueryRepository(DbContext context)
         return results.ToArray();
     }
 
+    internal async Task<StreamOverview[]> GetStreamsAsync(string hostUrl)
+    {
+        using var connection = context.CreateConnection();
+
+        var results = await connection.QueryAsync<StreamOverview>(
+            @"SELECT 
+                    s.id,
+                    s.subscription_id subscriptionId,
+                    sub.stream_key streamKey,
+                    h.url hostUrl,
+                    s.status,
+                    s.viewer_count viewerCount,
+                    s.start_time startTime,
+                    s.end_time endTime,
+                    s.message_id messageId,
+                    sub.channel_id channelId
+                FROM stream s
+                INNER JOIN subscription sub ON sub.id = s.subscription_id
+                INNER JOIN host h ON h.id = sub.host_id
+                WHERE h.url = @hostUrl", new
+            {
+                hostUrl
+            });
+
+        return results.ToArray();
+    }
+
+    public async Task<ulong?> GetChannelIdAsync(string hostUrl, string streamKey)
+    {
+        using var connection = context.CreateConnection();
+        return await connection.QueryFirstAsync<ulong>(
+            @"SELECT channel_id 
+                FROM subscription s
+                INNER JOIN host h ON h.id = s.host_id
+                WHERE s.stream_key = @streamKey AND h.url = @hostUrl", new
+            {
+                hostUrl,
+                streamKey
+            });
+    }
 
 
     internal async Task<Host[]> GetHostsAsync()

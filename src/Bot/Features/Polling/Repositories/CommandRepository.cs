@@ -1,6 +1,7 @@
 using Dapper;
 using Mira.Data;
 using Mira.Features.Polling.Models;
+using Mira.Features.Shared;
 
 namespace Mira.Features.Polling.Repositories;
 
@@ -23,6 +24,37 @@ public class CommandRepository(DbContext context)
                 viewerCount = stream.ViewerCount,
                 startTime = stream.StartTime,
                 endTime = stream.EndTime
+            });
+    }
+
+    public async Task RecordStreamLiveAsync(int subscriptionId, ulong messageId, DateTime startTime)
+    {
+        // This overrides any previously recorded stream, if a conflict is found
+        using var connection = context.CreateConnection();
+        await connection.ExecuteAsync(
+            @"INSERT INTO stream (subscription_id, status, message_id, start_time)
+                VALUES (@subscriptionId, @status, @messageId, @viewerCount, @startTime)
+                ON CONFLICT (subscription_id) DO UPDATE
+                SET status = @status, message_id = @messageId, start_time = @startTime, end_time = null", new
+            {
+                subscriptionId,
+                status = StreamStatus.Live,
+                messageId,
+                startTime
+            });
+    }
+
+    public async Task RecordStreamOfflineAsync(int id, DateTime endTime)
+    {
+        using var connection = context.CreateConnection();
+        await connection.ExecuteAsync(
+            @"UPDATE stream
+                SET status = @status, end_time = @endTime
+                WHERE id = @id", new
+            {
+                id,
+                status = StreamStatus.Offline,
+                endTime
             });
     }
 }

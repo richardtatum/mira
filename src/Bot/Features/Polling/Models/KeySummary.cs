@@ -7,7 +7,8 @@ public class KeySummary
     public VideoStream[] VideoStreams { get; set; } = [];
     public Viewer[] WhepSessions { get; set; } = [];
     public bool IsLive => VideoStreams.Any(stream => stream.SecondsSinceLastFrame < 15);
-    public int CurrentViewers => WhepSessions.Length;
+    public int Viewers => WhepSessions.Length;
+    public DateTime StartTime => DateTimeOffset.FromUnixTimeSeconds(FirstSeenEpoch).DateTime;
 }
 
 public class VideoStream
