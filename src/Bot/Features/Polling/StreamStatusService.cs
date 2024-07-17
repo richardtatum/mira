@@ -71,7 +71,7 @@ public class StreamStatusService(
                 StreamKey = stream.StreamKey,
                 HostUrl = stream.HostUrl,
                 Status = StreamStatus.Live,
-                StartTime = existingStream?.StartTime ?? DateTime.UtcNow,
+                StartTime = existingStream?.StartTime ?? stream.StartTime,
                 ViewerCount = stream.ViewerCount,
                 MessageId = existingStream?.MessageId,
                 ChannelId = stream.ChannelId
@@ -116,7 +116,8 @@ public class StreamStatusService(
                     StreamKey = subscription.StreamKey,
                     HostUrl = host.Url,
                     ViewerCount = stream.CurrentViewers,
-                    ChannelId = subscription.ChannelId
+                    ChannelId = subscription.ChannelId,
+                    StartTime = stream.StartTime
                 };
             })
             .ToArray();

@@ -7,4 +7,5 @@ public class LiveStream
     public string HostUrl { get; set; }
     public int ViewerCount { get; set; }
     public ulong ChannelId { get; set; }
+    public DateTime StartTime { get; set; }
 }
