@@ -11,7 +11,8 @@ public class SlashCommand(QueryRepository queryRepository, CommandRepository com
     : ISlashCommand, ISelectable
 {
     public string Name => "subscribe";
-    private const string CustomId = "subscribe";
+    private const string CustomIdPrefix = "subscribe";
+    private const char Divider = ':';
     private const string StreamKeyOptionName = "streamkey";
 
     public ApplicationCommandProperties BuildCommand() =>
@@ -63,18 +64,20 @@ public class SlashCommand(QueryRepository queryRepository, CommandRepository com
         var hostOptions = hosts
             .Select(host =>
                 new SelectMenuOptionBuilder(host.Url, host.Id.ToString(),
-                    $"Monitored URL: {host.Url}/{streamKey}"))
+                    $"Stream URL: {host.Url}/{streamKey}"))
             .ToList();
 
+        var customId = $"{CustomIdPrefix}{Divider}{streamKey}";
         var component = new ComponentBuilder()
-            .WithSelectMenu($"{CustomId}-{streamKey}", hostOptions, $"Where will `{streamKey}` stream?")
+            .WithSelectMenu(customId, hostOptions, $"Where will `{streamKey}` stream?")
             .Build();
 
         await command.FollowupAsync("Select a host:", components: component);
     }
 
+    // We could dispose of this concept and add the stream key as part of the selected value, setting the customId to just 'subscribe' like the other commands
     public bool HandlesComponent(SocketMessageComponent component) =>
-        component.Data.CustomId.Split("-").FirstOrDefault() == CustomId;
+        component.Data.CustomId.Split(Divider).FirstOrDefault() == CustomIdPrefix;
 
     public async Task RespondAsync(SocketMessageComponent component)
     {
@@ -85,7 +88,7 @@ public class SlashCommand(QueryRepository queryRepository, CommandRepository com
             return;
         }
         
-        var streamKey = component.Data.CustomId.Split("-").LastOrDefault();
+        var streamKey = component.Data.CustomId.Split(Divider).LastOrDefault();
         if (string.IsNullOrWhiteSpace(streamKey))
         {
             logger.LogCritical("[SLASH-COMMAND][{Name}] Failed to retrieve value from the streamKey customId. Received: {Key}", Name, streamKey);
