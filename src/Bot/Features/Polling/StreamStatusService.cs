@@ -113,7 +113,7 @@ public class StreamStatusService(
                     SubscriptionId = subscription.Id,
                     StreamKey = subscription.StreamKey,
                     HostUrl = host.Url,
-                    ViewerCount = stream.CurrentViewers,
+                    ViewerCount = stream.ViewerCount,
                     ChannelId = subscription.ChannelId,
                     StartTime = stream.StartTime
                 };
