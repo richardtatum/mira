@@ -34,8 +34,28 @@ public class QueryRepository(DbContext context)
 
         return results.ToArray();
     }
+    
+    internal async Task<StreamRecord[]> GetStreamsAsync(IEnumerable<int> subscriptionIds)
+    {
+        using var connection = context.CreateConnection();
 
+        var results = await connection.QueryAsync<StreamRecord>(
+            @"SELECT 
+                    id,
+                    subscription_id subscriptionId,
+                    status,
+                    viewer_count viewerCount,
+                    start_time startTime,
+                    end_time endTime,
+                    message_id messageId
+                FROM stream s
+                WHERE s.subscription_id in @subscriptionIds ", new
+            {
+                subscriptionIds
+            });
 
+        return results.ToArray();
+    }
 
     internal async Task<Host[]> GetHostsAsync()
     {

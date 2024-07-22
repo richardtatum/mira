@@ -67,7 +67,7 @@ public class PollingService(
             logger.LogInformation(
                 "[KEY-POLLING][{Host}] {Subscriptions} key subscription(s) found. Checking for stream updates.",
                 host.Url, subscriptions.Length);
-            await service.UpdateStreamsAsync(host, subscriptions);
+            await service.ExecuteAsync(host, subscriptions);
         } while (await timer.WaitForNextTickAsync(stoppingToken));
     }
 

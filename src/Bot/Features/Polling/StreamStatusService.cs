@@ -4,6 +4,7 @@ using Mira.Features.Polling.Models;
 using Mira.Features.Polling.Repositories;
 using Mira.Features.Shared;
 using Host = Mira.Features.Polling.Models.Host;
+using Stream = Mira.Features.Polling.Models.Stream;
 
 namespace Mira.Features.Polling;
 
@@ -14,6 +15,61 @@ public class StreamStatusService(
     CommandRepository command,
     IMessageService messageService) // This seems wrong, having polling rely on the message service
 {
+    public async Task ExecuteAsync(Host host, Subscription[] subscriptions)
+    {
+        var currentStreams = await client.GetStreamsAsync(host.Url);
+        var existingStreams = await query.GetStreamsAsync(subscriptions.Select(x => x.Id));
+
+        var streams = subscriptions
+            .Select(sub =>
+            {
+                var existingStream = existingStreams.FirstOrDefault(x => x.SubscriptionId == sub.Id);
+                var currentStream = currentStreams.FirstOrDefault(x => x.StreamKey == sub.StreamKey);
+
+                return new Stream(host.Url)
+                    .LoadSubscriptionData(sub)
+                    .LoadExistingStreamData(existingStream)
+                    .LoadCurrentStreamData(currentStream);
+            })
+            .ToArray();
+
+        var streamUpdates = streams.Where(stream => stream.StreamUpdated).ToArray();
+
+        var newMessageTasks = streamUpdates
+            .Where(stream => stream.SendNewMessage)
+            .Select(async stream =>
+            {
+                var (channelId, status, url, viewerCount, duration) = stream.DeconstructIntoNewMessage();
+                var messageId = await messageService
+                    .SendAsync(channelId, status, url, viewerCount, duration);
+
+                if (messageId is not null)
+                {
+                    stream.MarkMessageSent(messageId.Value);
+                }
+
+                return stream;
+            });
+
+        var updateMessageTasks = streamUpdates
+            .Where(stream => stream.SendUpdateMessage)
+            .Select(async stream =>
+            {
+                var (messageId, channelId, status, url, viewerCount, duration) = stream.DeconstructIntoUpdateMessage();
+                await messageService
+                    .ModifyAsync(messageId, channelId, status, url, viewerCount, duration);
+                return stream;
+            });
+
+        streamUpdates = await Task.WhenAll(newMessageTasks.Union(updateMessageTasks));
+
+        var upsertRecordsTasks = streamUpdates
+            .Select(stream => command.UpsertStreamRecord(stream.ToStreamRecord()));
+
+        await Task.WhenAll(upsertRecordsTasks);
+    }
+
+
     // I am still not happy with this approach. Probably makes more sense to do event based however I am worried about even more
     // running background services
     internal async Task UpdateStreamsAsync(Host host, Subscription[] subscriptions)
