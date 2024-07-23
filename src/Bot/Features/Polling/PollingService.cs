@@ -50,7 +50,8 @@ public class PollingService(
                 .ToArray();
 
             await CancelSubscriptionsAsync(staleHosts);
-        } while (await timer.WaitForNextTickAsync(stoppingToken));
+            await timer.WaitForNextTickAsync(stoppingToken);
+        } while (!stoppingToken.IsCancellationRequested);
     }
 
     private async Task SubscribeToHostAsync(Host host, CancellationToken stoppingToken)
