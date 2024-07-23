@@ -12,9 +12,19 @@ public class StreamStatusService(
     CommandRepository command,
     IMessageService messageService) // This seems wrong, having polling rely on the message service
 {
-    public async Task ExecuteAsync(Host host, Subscription[] subscriptions)
+    public async Task ExecuteAsync(string hostUrl)
     {
-        var currentStreams = await client.GetStreamsAsync(host.Url);
+        var subscriptions = await query.GetSubscriptionsAsync(hostUrl);
+        if (subscriptions.Length == 0)
+        {
+            logger.LogInformation("[CHANGE-TRACKING][{Host}] No key subscriptions found. Skipping.", hostUrl);
+            return;
+        }
+
+        logger.LogInformation(
+            "[CHANGE-TRACKING][{Host}] {Subscriptions} key subscription(s) found. Checking for stream updates.",
+            hostUrl, subscriptions.Length);
+        var currentStreams = await client.GetStreamsAsync(hostUrl);
         var existingStreams = await query.GetStreamsAsync(subscriptions.Select(x => x.Id));
 
         var streams = subscriptions
@@ -23,7 +33,7 @@ public class StreamStatusService(
                 var existingStream = existingStreams.FirstOrDefault(x => x.SubscriptionId == sub.Id);
                 var currentStream = currentStreams.FirstOrDefault(x => x.StreamKey == sub.StreamKey);
 
-                return new Stream(host.Url)
+                return new Stream(hostUrl)
                     .LoadSubscriptionData(sub)
                     .LoadExistingStreamData(existingStream)
                     .LoadCurrentStreamData(currentStream);

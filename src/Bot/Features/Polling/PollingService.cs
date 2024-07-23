@@ -58,18 +58,9 @@ public class PollingService(
         using var timer = new PeriodicTimer(host.PollInterval);
         do
         {
-            var subscriptions = await query.GetSubscriptionsAsync(host.Url);
-            if (subscriptions.Length == 0)
-            {
-                logger.LogInformation("[KEY-POLLING][{Host}] No key subscriptions found. Skipping.", host.Url);
-                continue;
-            }
-
-            logger.LogInformation(
-                "[KEY-POLLING][{Host}] {Subscriptions} key subscription(s) found. Checking for stream updates.",
-                host.Url, subscriptions.Length);
-            await service.ExecuteAsync(host, subscriptions);
-        } while (await timer.WaitForNextTickAsync(stoppingToken));
+            await service.ExecuteAsync(host.Url);
+            await timer.WaitForNextTickAsync(stoppingToken);
+        } while (!stoppingToken.IsCancellationRequested);
     }
 
     private Task CancelSubscriptionsAsync(
