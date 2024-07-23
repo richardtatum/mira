@@ -1,7 +1,7 @@
-using Mira.Features.Polling.Models;
+using Mira.Features.ChangeTracking.Core.Models;
 using Mira.Features.Shared;
 
-namespace Mira.Features.Polling.Extensions;
+namespace Mira.Features.ChangeTracking.Core;
 
 public static class StreamStatusExtensions
 {

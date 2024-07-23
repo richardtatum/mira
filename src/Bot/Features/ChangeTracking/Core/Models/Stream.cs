@@ -1,8 +1,7 @@
 using System.Text.Json;
-using Mira.Features.Polling.Extensions;
 using Mira.Features.Shared;
 
-namespace Mira.Features.Polling.Models;
+namespace Mira.Features.ChangeTracking.Core.Models;
 
 public class Stream(string hostUrl)
 {
@@ -130,7 +129,7 @@ public class Stream(string hostUrl)
         return (RecordedMessageId!.Value, ChannelId, Status, url, CurrentViewerCount ?? 0, duration);
     }
 
-    // Update this to return with result type?
+    // Update this to return with Result<StreamRecord> type?
     public StreamRecord ToStreamRecord()
     {
         if (RecordedMessageId is null && MessageId is null)

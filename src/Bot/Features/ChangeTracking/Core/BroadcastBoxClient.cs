@@ -1,8 +1,8 @@
 using System.Net.Http.Json;
 using Microsoft.Extensions.Logging;
-using Mira.Features.Polling.Models;
+using Mira.Features.ChangeTracking.Core.Models;
 
-namespace Mira.Features.Polling;
+namespace Mira.Features.ChangeTracking.Core;
 
 public class BroadcastBoxClient(IHttpClientFactory httpClientFactory, ILogger<BroadcastBoxClient> logger)
 {

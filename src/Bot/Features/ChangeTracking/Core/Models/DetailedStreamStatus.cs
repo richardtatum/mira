@@ -1,4 +1,4 @@
-namespace Mira.Features.Polling.Models;
+namespace Mira.Features.ChangeTracking.Core.Models;
 
 public enum DetailedStreamStatus
 {
