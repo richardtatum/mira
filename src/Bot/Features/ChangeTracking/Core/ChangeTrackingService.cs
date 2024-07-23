@@ -5,9 +5,9 @@ using Stream = Mira.Features.ChangeTracking.Core.Models.Stream;
 
 namespace Mira.Features.ChangeTracking.Core;
 
-public class StreamStatusService(
+public class ChangeTrackingService(
     BroadcastBoxClient client,
-    ILogger<StreamStatusService> logger,
+    ILogger<ChangeTrackingService> logger,
     QueryRepository query,
     CommandRepository command,
     IMessageService messageService) // This seems wrong, having polling rely on the message service

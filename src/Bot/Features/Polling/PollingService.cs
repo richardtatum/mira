@@ -10,7 +10,7 @@ namespace Mira.Features.Polling;
 
 public class PollingService(
     QueryRepository query,
-    StreamStatusService service,
+    ChangeTrackingService service,
     ILogger<PollingService> logger,
     IOptions<PollingOptions> options)
     : BackgroundService
