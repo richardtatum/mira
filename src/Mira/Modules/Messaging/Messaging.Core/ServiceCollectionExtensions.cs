@@ -1,5 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
-using Shared.Core;
+using Shared.Core.Interfaces;
 
 namespace Messaging.Core;
 

@@ -2,6 +2,7 @@ using Discord;
 using Discord.WebSocket;
 using Microsoft.Extensions.Logging;
 using Shared.Core;
+using Shared.Core.Interfaces;
 
 namespace Messaging.Core;
 

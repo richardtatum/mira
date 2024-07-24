@@ -1,6 +1,5 @@
 using ChangeTracking.Core.Repositories;
 using Microsoft.Extensions.Logging;
-using Shared.Core;
 using Shared.Core.Interfaces;
 using Stream = ChangeTracking.Core.Models.Stream;
 
