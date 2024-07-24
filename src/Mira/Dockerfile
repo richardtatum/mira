@@ -3,12 +3,12 @@ ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 
 # Find and copy all modules .csproj files to their respective directories inside /app/modules
-COPY ["./Modules", "/temp/Modules"]
+COPY ["Modules/", "/temp/Modules"]
 RUN find /temp/Modules -name "*.csproj" -exec sh -c 'd=$(dirname "{}"); mkdir -p /src/Mira/Modules/${d#/temp/Modules/} && cp "{}" /src/Mira/Modules/${d#/temp/Modules/}/$(basename "{}")' \;
 RUN find /src/Mira/Modules -name "*.csproj" -print # Print out the .csproj files to verify they are copied correctly
 
 # Copy the main project for restore
-COPY ["./Bot/Bot.csproj", "./Mira/Bot/"]
+COPY ["Bot/Bot.csproj", "./Mira/Bot/"]
 RUN dotnet restore "./Mira/Bot/Bot.csproj"
 
 COPY . ./Mira
