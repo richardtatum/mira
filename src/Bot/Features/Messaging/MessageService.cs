@@ -29,6 +29,7 @@ public class MessageService(DiscordSocketClient discord, ILogger<MessageService>
 
     public async Task<ulong?> ModifyAsync(ulong messageId, ulong channelId, StreamStatus status, string url, int viewers, TimeSpan duration)
     {
+        // TODO: Check validity off messageId too
         var channel = GetChannel(channelId);
         if (channel is null)
         {
