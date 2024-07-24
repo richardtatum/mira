@@ -1,7 +1,6 @@
 using Dapper;
 using Mira.Data;
 using Mira.Features.Polling.Models;
-using Mira.Features.Shared;
 
 namespace Mira.Features.Polling.Repositories;
 
