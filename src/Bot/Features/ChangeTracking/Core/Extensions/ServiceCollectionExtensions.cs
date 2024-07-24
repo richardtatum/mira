@@ -7,7 +7,7 @@ public static class ServiceCollectionExtensions
 {
     public static void AddChangeTracking(this IServiceCollection services)
     {
-        services.AddTransient<StreamStatusService>();
+        services.AddTransient<ChangeTrackingService>();
         services.AddTransient<BroadcastBoxClient>();
         services.AddTransient<QueryRepository>();
         services.AddTransient<CommandRepository>();
