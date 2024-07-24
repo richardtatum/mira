@@ -1,0 +1,32 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\Shared\Shared.Core\Shared.Core.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Reference Include="Discord.Net.Core">
+        <HintPath>..\..\..\..\..\..\..\.nuget\packages\discord.net.core\3.15.0\lib\net6.0\Discord.Net.Core.dll</HintPath>
+      </Reference>
+      <Reference Include="Discord.Net.WebSocket">
+        <HintPath>..\..\..\..\..\..\..\.nuget\packages\discord.net.websocket\3.15.0\lib\net6.0\Discord.Net.WebSocket.dll</HintPath>
+      </Reference>
+      <Reference Include="Microsoft.Extensions.DependencyInjection.Abstractions">
+        <HintPath>..\..\..\..\..\..\..\.nuget\packages\microsoft.extensions.dependencyinjection.abstractions\8.0.0\lib\net8.0\Microsoft.Extensions.DependencyInjection.Abstractions.dll</HintPath>
+      </Reference>
+      <Reference Include="Microsoft.Extensions.Logging.Abstractions">
+        <HintPath>..\..\..\..\..\..\..\.nuget\packages\microsoft.extensions.logging.abstractions\8.0.0\lib\net8.0\Microsoft.Extensions.Logging.Abstractions.dll</HintPath>
+      </Reference>
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Discord.Net" Version="3.15.3" />
+    </ItemGroup>
+
+</Project>
