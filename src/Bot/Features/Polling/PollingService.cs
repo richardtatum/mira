@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Mira.Features.ChangeTracking.Core;
 using Mira.Features.Polling.Options;
 using Mira.Features.Polling.Repositories;
 using Host = Mira.Features.Polling.Models.Host;
@@ -9,7 +10,7 @@ namespace Mira.Features.Polling;
 
 public class PollingService(
     QueryRepository query,
-    StreamStatusService service,
+    ChangeTrackingService service,
     ILogger<PollingService> logger,
     IOptions<PollingOptions> options)
     : BackgroundService
@@ -49,7 +50,8 @@ public class PollingService(
                 .ToArray();
 
             await CancelSubscriptionsAsync(staleHosts);
-        } while (await timer.WaitForNextTickAsync(stoppingToken));
+            await timer.WaitForNextTickAsync(stoppingToken);
+        } while (!stoppingToken.IsCancellationRequested);
     }
 
     private async Task SubscribeToHostAsync(Host host, CancellationToken stoppingToken)
@@ -57,18 +59,9 @@ public class PollingService(
         using var timer = new PeriodicTimer(host.PollInterval);
         do
         {
-            var subscriptions = await query.GetSubscriptionsAsync(host.Url);
-            if (subscriptions.Length == 0)
-            {
-                logger.LogInformation("[KEY-POLLING][{Host}] No key subscriptions found. Skipping.", host.Url);
-                continue;
-            }
-
-            logger.LogInformation(
-                "[KEY-POLLING][{Host}] {Subscriptions} key subscription(s) found. Checking for stream updates.",
-                host.Url, subscriptions.Length);
-            await service.UpdateStreamsAsync(host, subscriptions);
-        } while (await timer.WaitForNextTickAsync(stoppingToken));
+            await service.ExecuteAsync(host.Url);
+            await timer.WaitForNextTickAsync(stoppingToken);
+        } while (!stoppingToken.IsCancellationRequested);
     }
 
     private Task CancelSubscriptionsAsync(

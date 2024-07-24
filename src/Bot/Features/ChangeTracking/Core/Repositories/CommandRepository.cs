@@ -1,8 +1,8 @@
 using Dapper;
 using Mira.Data;
-using Mira.Features.Polling.Models;
+using Mira.Features.ChangeTracking.Core.Models;
 
-namespace Mira.Features.Polling.Repositories;
+namespace Mira.Features.ChangeTracking.Core.Repositories;
 
 public class CommandRepository(DbContext context)
 {

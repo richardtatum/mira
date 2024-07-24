@@ -1,4 +1,4 @@
-namespace Mira.Features.Polling.Models;
+namespace Mira.Features.ChangeTracking.Core.Models;
 
 public class KeySummary
 {
@@ -7,7 +7,7 @@ public class KeySummary
     public VideoStream[] VideoStreams { get; set; } = [];
     public Viewer[] WhepSessions { get; set; } = [];
     public bool IsLive => VideoStreams.Any(stream => stream.SecondsSinceLastFrame < 15);
-    public int CurrentViewers => WhepSessions.Length;
+    public int ViewerCount => WhepSessions.Length;
     public DateTime StartTime => DateTimeOffset.FromUnixTimeSeconds(FirstSeenEpoch).DateTime;
 }
 

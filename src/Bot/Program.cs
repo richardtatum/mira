@@ -5,27 +5,29 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Mira;
 using Mira.Data;
+using Mira.Features.ChangeTracking.Core;
 using Mira.Features.Cleanup;
 using Mira.Features.Messaging;
 using Mira.Features.Polling;
 using Mira.Features.SlashCommands;
+
+var config = new DiscordSocketConfig
+{
+    GatewayIntents = GatewayIntents.Guilds
+};
 
 var host = Host.CreateDefaultBuilder()
     .ConfigureServices((_, services) =>
     {
         services.AddSingleton<LoggingService>();
         services.AddSingleton<DbContext>();
-        services.AddSingleton(new DiscordSocketClient(new DiscordSocketConfig
-        {
-            GatewayIntents = GatewayIntents.Guilds
-        }));
-
+        services.AddSingleton(new DiscordSocketClient(config));
         services.AddHttpClient();
         services.AddSlashCommands();
         services.AddPollingService();
+        services.AddChangeTracking();
         services.AddMessagingService();
         services.AddCleanupServices();
-        ;
     })
     .Build();
 
