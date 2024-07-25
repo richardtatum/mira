@@ -5,7 +5,7 @@ using Stream = ChangeTracking.Core.Models.Stream;
 
 namespace ChangeTracking.Core;
 
-public class ChangeTrackingService(
+internal class ChangeTrackingService(
     BroadcastBoxClient client,
     ILogger<ChangeTrackingService> logger,
     QueryRepository query,

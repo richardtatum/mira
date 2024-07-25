@@ -4,9 +4,9 @@ using Microsoft.Extensions.Logging;
 
 namespace ChangeTracking.Core;
 
-public class BroadcastBoxClient(IHttpClientFactory httpClientFactory, ILogger<BroadcastBoxClient> logger)
+internal class BroadcastBoxClient(IHttpClientFactory httpClientFactory, ILogger<BroadcastBoxClient> logger)
 {
-    public async Task<KeySummary[]> GetStreamsAsync(string hostUrl)
+    internal async Task<KeySummary[]> GetStreamsAsync(string hostUrl)
     {
         if (string.IsNullOrWhiteSpace(hostUrl))
         {

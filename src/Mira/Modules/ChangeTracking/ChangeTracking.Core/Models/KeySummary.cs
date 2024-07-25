@@ -1,6 +1,6 @@
 namespace ChangeTracking.Core.Models;
 
-public class KeySummary
+internal class KeySummary
 {
     public string StreamKey { get; set; }
     public long FirstSeenEpoch { get; set; }
@@ -11,7 +11,7 @@ public class KeySummary
     public DateTime StartTime => DateTimeOffset.FromUnixTimeSeconds(FirstSeenEpoch).DateTime;
 }
 
-public class VideoStream
+internal class VideoStream
 {
     public string? Rid { get; set; }
     public long PacketsReceived { get; set; }
@@ -19,7 +19,7 @@ public class VideoStream
     public double SecondsSinceLastFrame => DateTime.UtcNow.Subtract(LastKeyFrameSeen).TotalSeconds;
 }
 
-public class Viewer
+internal class Viewer
 {
     public string? Id { get; set; }
 }

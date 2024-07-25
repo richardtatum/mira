@@ -4,7 +4,7 @@ using Shared.Core;
 
 namespace ChangeTracking.Core.Models;
 
-public class Stream(string hostUrl)
+internal class Stream(string hostUrl)
 {
     // Base
     private string HostUrl { get; } = hostUrl;

@@ -4,9 +4,9 @@ using Shared.Core;
 
 namespace ChangeTracking.Core.Repositories;
 
-public class CommandRepository(DbContext context)
+internal class CommandRepository(DbContext context)
 {
-    public async Task UpsertStreamRecord(StreamRecord stream)
+    internal async Task UpsertStreamRecord(StreamRecord stream)
     {
         // Conflicts could either be because of current live streams where we are updating the status/viewers/endtime
         // or existing records that are now being overwritten with new streams

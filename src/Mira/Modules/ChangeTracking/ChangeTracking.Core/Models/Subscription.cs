@@ -1,6 +1,6 @@
 namespace ChangeTracking.Core.Models;
 
-public class Subscription
+internal class Subscription
 {
     public int Id { get; set; }
     public string StreamKey { get; set; } = null!;

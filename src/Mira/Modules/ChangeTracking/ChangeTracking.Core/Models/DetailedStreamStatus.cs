@@ -1,6 +1,6 @@
 namespace ChangeTracking.Core.Models;
 
-public enum DetailedStreamStatus
+internal enum DetailedStreamStatus
 {
     Offline,
     Live,

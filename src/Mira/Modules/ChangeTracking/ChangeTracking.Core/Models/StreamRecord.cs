@@ -2,7 +2,7 @@ using Shared.Core;
 
 namespace ChangeTracking.Core.Models;
 
-public class StreamRecord
+internal class StreamRecord
 {
     public int? Id { get; set; }
     public int SubscriptionId { get; set; }
