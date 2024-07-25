@@ -32,15 +32,15 @@ internal class Stream(string hostUrl)
     private ulong? MessageId { get; set; }
     private bool MessageSent { get; set; }
 
-    // Meta
-    public StreamStatus Status => DetailedStreamStatus.ToStreamStatus();
-    public DateTime StartTime => DetailedStreamStatus switch
+    // Stream Status
+    private StreamStatus Status => DetailedStreamStatus.ToStreamStatus();
+    private DateTime StartTime => DetailedStreamStatus switch
     {
         DetailedStreamStatus.Starting => CurrentStartTime ?? DateTime.UtcNow,
         _ => RecordedStartTime ?? DateTime.UtcNow
     };
-    public TimeSpan Duration => (EndTime ?? DateTime.UtcNow).Subtract(StartTime);
-    public DateTime? EndTime => DetailedStreamStatus switch
+    private TimeSpan Duration => (EndTime ?? DateTime.UtcNow).Subtract(StartTime);
+    private DateTime? EndTime => DetailedStreamStatus switch
     {
         DetailedStreamStatus.Starting => null,
         DetailedStreamStatus.Live => null,
@@ -49,15 +49,16 @@ internal class Stream(string hostUrl)
         _ => throw new ArgumentOutOfRangeException()
     };
 
+    // Meta
+    public bool IsValid => SubscriptionLoaded && ExistingStreamLoaded && CurrentStreamLoaded;
 
     // Internal meta
-    private bool IsValid => SubscriptionLoaded && ExistingStreamLoaded && CurrentStreamLoaded;
     private DetailedStreamStatus DetailedStreamStatus { get; set; }
 
     // Offline is the only status we ignore
     public bool StreamUpdated => IsValid && DetailedStreamStatus != DetailedStreamStatus.Offline;
     public bool SendNewMessage => IsValid && DetailedStreamStatus == DetailedStreamStatus.Starting;
-    public bool SendUpdateMessage => IsValid && DetailedStreamStatus == DetailedStreamStatus.Live ||
+    public bool SendUpdateMessage => IsValid && RecordedMessageId is not null && DetailedStreamStatus == DetailedStreamStatus.Live ||
                                      DetailedStreamStatus == DetailedStreamStatus.Ending;
 
     public Stream LoadExistingStreamData(StreamRecord? record)
@@ -89,6 +90,7 @@ internal class Stream(string hostUrl)
         return this;
     }
 
+    // Should I be validating this data?
     public Stream LoadSubscriptionData(Subscription subscription)
     {
         SubscriptionId = subscription.Id;
