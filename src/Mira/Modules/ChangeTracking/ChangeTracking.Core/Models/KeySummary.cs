@@ -2,21 +2,22 @@ namespace ChangeTracking.Core.Models;
 
 internal class KeySummary
 {
-    public string StreamKey { get; set; }
+    public string StreamKey { get; set; } = null!;
     public long FirstSeenEpoch { get; set; }
     public VideoStream[] VideoStreams { get; set; } = [];
     public Viewer[] WhepSessions { get; set; } = [];
-    public bool IsLive => VideoStreams.Any(stream => stream.SecondsSinceLastFrame < 15);
+    public bool IsLive => VideoStreams.Any(stream => stream.IsLive);
     public int ViewerCount => WhepSessions.Length;
     public DateTime StartTime => DateTimeOffset.FromUnixTimeSeconds(FirstSeenEpoch).DateTime;
 }
 
 internal class VideoStream
 {
-    public string? Rid { get; set; }
-    public long PacketsReceived { get; set; }
+    // The maximum time since the last frame before a stream is considered offline
+    private const int MaxAllowedSecondsSinceLastFrame = 15;
     public DateTime LastKeyFrameSeen { get; set; }
-    public double SecondsSinceLastFrame => DateTime.UtcNow.Subtract(LastKeyFrameSeen).TotalSeconds;
+    private double SecondsSinceLastFrame => DateTime.UtcNow.Subtract(LastKeyFrameSeen).TotalSeconds;
+    public bool IsLive => SecondsSinceLastFrame < MaxAllowedSecondsSinceLastFrame;
 }
 
 internal class Viewer
