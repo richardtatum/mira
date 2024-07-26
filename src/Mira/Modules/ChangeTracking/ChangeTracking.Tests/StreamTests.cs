@@ -189,7 +189,7 @@ public class StreamTests
     }
     
     [Fact]
-    public void ToStreamRecord_ShouldReturnStreamRecord_WhenMessageIsMarkedSent()
+    public void ToStreamRecord_ShouldReturnStreamRecord_WhenNewMessageIsMarkedSent()
     {
         var hostUrl = "exampleHostUrl";
         var messageId = 12345UL;
@@ -216,13 +216,13 @@ public class StreamTests
 
         var result = stream.ToStreamRecord();
 
-        // Assert
         Assert.Null(result.Id);
         Assert.Equal(messageId, result.MessageId);
     }
     
+        
     [Fact]
-    public void ToStreamRecord_ShouldThrowException_WhenMessageIdIsNotSaved()
+    public void ToStreamRecord_ShouldThrowException_WhenNewMessageIdIsNotMarkedSent()
     {
         var hostUrl = "exampleHostUrl";
 
@@ -286,7 +286,7 @@ public class StreamTests
     }
 
     [Fact]
-    public void ToStreamRecord_UpdatesExistingStartTimeEndTime_WhenNewStreamIsStarting()
+    public void ToStreamRecord_ShouldUpdateExistingStartTimeEndTime_WhenNewStreamIsStarting()
     {
         var hostUrl = "exampleHostUrl";
         var existingStartTime = new DateTime(2020, 03, 11);
@@ -330,7 +330,7 @@ public class StreamTests
     }
     
     [Fact]
-    public void ToStreamRecord_SetsNewMessageId_WhenNewStreamIsStarting()
+    public void ToStreamRecord_ShouldSetNewMessageId_WhenNewStreamIsStarting()
     {
         var hostUrl = "exampleHostUrl";
         var newMessageId = 54321UL;
@@ -370,7 +370,7 @@ public class StreamTests
     }
     
     [Fact]
-    public void ToStreamRecord_UseExistingStartTime_WhenStreamIsUpdating()
+    public void ToStreamRecord_ShouldUseExistingStartTime_WhenStreamIsUpdating()
     {
         var hostUrl = "exampleHostUrl";
         var existingStartTime = new DateTime(2020, 03, 11);
@@ -410,7 +410,7 @@ public class StreamTests
     }
     
     [Fact]
-    public void ToStreamRecord_UseExistingMessageId_WhenStreamIsUpdating()
+    public void ToStreamRecord_ShouldUseExistingMessageId_WhenStreamIsUpdating()
     {
         var hostUrl = "exampleHostUrl";
 
@@ -447,7 +447,7 @@ public class StreamTests
     }
     
     [Fact]
-    public void ToStreamRecord_CurrentStreamOffline_WhenTimeSinceLastFrameOutOfWindow()
+    public void ToStreamRecord_ShouldMarkCurrentStreamOffline_WhenTimeSinceLastFrameOutOfWindow()
     {
         var hostUrl = "exampleHostUrl";
         var secondsSinceLastFrame = 30;
@@ -486,6 +486,4 @@ public class StreamTests
 
         Assert.Equal(StreamStatus.Offline, result.Status);
     }
-    
-    // Update viewer count test for update message
 }
