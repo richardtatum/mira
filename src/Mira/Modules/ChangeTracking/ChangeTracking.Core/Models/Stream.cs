@@ -21,6 +21,7 @@ internal class Stream
         ExistingStreamMessageId = existingStream?.MessageId;
         ExistingStreamStartTime = existingStream?.StartTime;
         ExistingStreamEndTime = existingStream?.EndTime;
+        Playing = existingStream?.Playing;
         
         // Current Stream
         DetailedStreamStatus = ExistingStreamStatus.ToDetailedStreamStatus(currentStream?.IsLive ?? false);
@@ -40,6 +41,7 @@ internal class Stream
     private ulong? ExistingStreamMessageId { get; }
     private DateTime? ExistingStreamStartTime { get; }
     private DateTime? ExistingStreamEndTime { get; }
+    private string? Playing { get; set; }
     private int? CurrentViewerCount { get; }
     private DateTime? CurrentStartTime { get; }
     
@@ -95,7 +97,7 @@ internal class Stream
         return (ChannelId, Status, url, CurrentViewerCount ?? 0, Duration);
     }
 
-    public (ulong messageId, ulong channelId, StreamStatus status, string url, int viewerCount, TimeSpan duration)
+    public (ulong messageId, ulong channelId, StreamStatus status, string url, int viewerCount, TimeSpan duration, string? playing)
         DeconstructIntoUpdateMessage()
     {
         if (!SendUpdateMessage)
@@ -104,7 +106,7 @@ internal class Stream
         }
 
         var url = $"{HostUrl}/{StreamKey}";
-        return (ExistingStreamMessageId!.Value, ChannelId, Status, url, CurrentViewerCount ?? 0, Duration);
+        return (ExistingStreamMessageId!.Value, ChannelId, Status, url, CurrentViewerCount ?? 0, Duration, Playing);
     }
 
     // Update this to return with Result<StreamRecord> type?
@@ -119,6 +121,9 @@ internal class Stream
         // We prioritise any new messageIds first
         var messageId = (MessageId ?? ExistingStreamMessageId)!.Value;
 
+        // Ensure all new streams start with an empty playing
+        var playing = SendNewMessage ? null : Playing;
+
         return new StreamRecord
         {
             Id = ExistingStreamId ?? null,
@@ -127,7 +132,8 @@ internal class Stream
             ViewerCount = CurrentViewerCount ?? 0,
             MessageId = messageId,
             StartTime = StartTime,
-            EndTime = EndTime
+            EndTime = EndTime,
+            Playing = playing
         };
     }
 }

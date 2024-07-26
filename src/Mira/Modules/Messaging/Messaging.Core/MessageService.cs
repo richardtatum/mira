@@ -8,7 +8,7 @@ namespace Messaging.Core;
 
 public class MessageService(DiscordSocketClient discord, ILogger<MessageService> logger) : IMessageService
 {
-    public async Task<ulong?> SendAsync(ulong channelId, StreamStatus status, string url, int viewers, TimeSpan duration)
+    public async Task<ulong?> SendAsync(ulong channelId, StreamStatus status, string url, int viewers, TimeSpan duration, string playing = null)
     {
         var channel = GetChannel(channelId);
         if (channel is null)
@@ -17,10 +17,11 @@ public class MessageService(DiscordSocketClient discord, ILogger<MessageService>
             return null;
         }
 
+        // We are never sending a new offline message, should this be simplified?
         var embed = status switch
         {
-            StreamStatus.Live => MessageEmbed.Live(url, viewers, duration),
-            StreamStatus.Offline => MessageEmbed.Offline(url, viewers, duration),
+            StreamStatus.Live => MessageEmbed.Live(url, viewers, duration, playing),
+            StreamStatus.Offline => MessageEmbed.Offline(url, duration, playing),
             _ => throw new ArgumentOutOfRangeException(nameof(status), status, null)
         };
         
@@ -28,7 +29,7 @@ public class MessageService(DiscordSocketClient discord, ILogger<MessageService>
         return message.Id;
     }
 
-    public async Task<ulong?> ModifyAsync(ulong messageId, ulong channelId, StreamStatus status, string url, int viewers, TimeSpan duration)
+    public async Task<ulong?> ModifyAsync(ulong messageId, ulong channelId, StreamStatus status, string url, int viewers, TimeSpan duration, string? playing)
     {
         // TODO: Check validity off messageId too
         var channel = GetChannel(channelId);
@@ -40,8 +41,8 @@ public class MessageService(DiscordSocketClient discord, ILogger<MessageService>
         
         var embed = status switch
         {
-            StreamStatus.Live => MessageEmbed.Live(url, viewers, duration),
-            StreamStatus.Offline => MessageEmbed.Offline(url, viewers, duration),
+            StreamStatus.Live => MessageEmbed.Live(url, viewers, duration, playing),
+            StreamStatus.Offline => MessageEmbed.Offline(url, duration, playing),
             _ => throw new ArgumentOutOfRangeException(nameof(status), status, null)
         };
 

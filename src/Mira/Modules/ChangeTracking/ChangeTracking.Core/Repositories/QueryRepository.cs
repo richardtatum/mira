@@ -33,7 +33,8 @@ internal class QueryRepository(DbContext context)
                     viewer_count viewerCount,
                     start_time startTime,
                     end_time endTime,
-                    message_id messageId
+                    message_id messageId,
+                    playing
                 FROM stream s
                 WHERE s.subscription_id in @subscriptionIds ", new
             {

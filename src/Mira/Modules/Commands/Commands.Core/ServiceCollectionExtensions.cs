@@ -1,5 +1,6 @@
 using Commands.Core.AddHost;
 using Commands.Core.List;
+using Commands.Core.Playing;
 using Commands.Core.RemoveHost;
 using Commands.Core.Subscribe;
 using Commands.Core.Unsubscribe;
@@ -17,7 +18,8 @@ public static class ServiceCollectionExtensions
             .AddRemoveHostCommand()
             .AddSubscribeSlashCommand()
             .AddUnsubscribeSlashCommand()
-            .AddListSlashCommand();
+            .AddListSlashCommand()
+            .AddPlayingSlashCommand();
 
         services.TryAddTransient<Builder>();
         services.TryAddTransient<Handler>();
