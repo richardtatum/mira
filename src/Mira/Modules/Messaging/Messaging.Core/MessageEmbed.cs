@@ -20,8 +20,8 @@ public static class MessageEmbed
         
         // Set viewers and duration as inline
         fields.AddRange([
-            new EmbedFieldBuilder().WithName("Viewers").WithValue(viewers).WithIsInline(true),
-            new EmbedFieldBuilder().WithName("Duration").WithValue(duration.ToString(@"hh\:mm")).WithIsInline(true)
+            new EmbedFieldBuilder().WithName("Duration").WithValue(duration.ToString(@"hh\:mm")).WithIsInline(true),
+            new EmbedFieldBuilder().WithName("Viewers").WithValue(viewers).WithIsInline(true)
         ]);
 
         return new EmbedBuilder()
