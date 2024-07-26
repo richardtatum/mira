@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS stream (
     status INTEGER NOT NULL,
     viewer_count INTEGER DEFAULT 0 NOT NULL,
     message_id INTEGER NOT NULL,
+    playing TEXT NULL,
     start_time TEXT NOT NULL,
     end_time TEXT NULL,
     FOREIGN KEY (subscription_id) REFERENCES subscription(id) ON DELETE CASCADE,

@@ -4,31 +4,62 @@ namespace Messaging.Core;
 
 public static class MessageEmbed
 {
-    public static Embed Live(string url, int viewers, TimeSpan duration)
-        => new EmbedBuilder()
-            .WithTitle("Stream Online")
-            .WithDescription($"{url} is currently live!")
-            .WithColor(Color.Green)
-            .WithFields(
-                new EmbedFieldBuilder().WithName("Viewers").WithValue(viewers),
-                new EmbedFieldBuilder().WithName("Duration").WithValue(duration.ToString(@"hh\:mm"))
-            )
-            .WithFooter("Last Updated: ")
-            .WithCurrentTimestamp()// Updating the embed means that the stream started with localized time doesn't work
-            .Build();
+    public static Embed Live(string url, int viewers, TimeSpan duration, string? playing)
+    {
+        var fields = new List<EmbedFieldBuilder>
+        {
+            // Add an empty line between the description and the first field
+            new EmbedFieldBuilder().WithName("\u200B").WithValue("\u200B")
+        };
+                
+        // Add the playing status first
+        if (playing is not null)
+        {
+            fields.Add(new EmbedFieldBuilder().WithName("Currently Playing").WithValue(playing));
+        }
+        
+        // Set viewers and duration as inline
+        fields.AddRange([
+            new EmbedFieldBuilder().WithName("Viewers").WithValue(viewers).WithIsInline(true),
+            new EmbedFieldBuilder().WithName("Duration").WithValue(duration.ToString(@"hh\:mm")).WithIsInline(true)
+        ]);
 
-    // I don't think viewers is good for offline. It should be a summary of the stream instead
-    // Started, ended, duration, etc
-    public static Embed Offline(string url, int viewers, TimeSpan duration)
-        => new EmbedBuilder()
+        return new EmbedBuilder()
+            .WithTitle("Stream Online")
+            .WithDescription($"{url} is live!")
+            .WithColor(Color.Green)
+            .WithFields(fields)
+            .WithFooter("Last Updated: ")
+            .WithCurrentTimestamp()
+            .Build();
+    }
+
+
+    public static Embed Offline(string url, TimeSpan duration, string? playing)
+    {
+        var fields = new List<EmbedFieldBuilder>
+        {
+            // Add an empty line between the description and the first field
+            new EmbedFieldBuilder().WithName("\u200B").WithValue("\u200B")
+        };
+
+        // Add the playing status first
+        if (playing is not null)
+        {
+            fields.Add(new EmbedFieldBuilder().WithName("Previously Playing").WithValue(playing));
+        }
+
+        fields.AddRange([
+            new EmbedFieldBuilder().WithName("Duration").WithValue(duration.ToString(@"hh\:mm")).WithIsInline(true)
+        ]);
+        
+        return new EmbedBuilder()
             .WithTitle("Stream Offline")            
-            .WithDescription($"{url} is now offline.")
+            .WithDescription($"{url} is offline.")
             .WithColor(Color.Red)
-            .WithFields(
-                new EmbedFieldBuilder().WithName("Viewers").WithValue(viewers),
-                new EmbedFieldBuilder().WithName("Duration").WithValue(duration.ToString(@"hh\:mm"))
-            )
+            .WithFields(fields)
             .WithFooter("Ended: ")
             .WithCurrentTimestamp() 
             .Build();
+    }
 }

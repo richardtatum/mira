@@ -10,6 +10,9 @@
       <Reference Include="Dapper">
         <HintPath>..\..\..\..\..\..\..\.nuget\packages\dapper\2.1.35\lib\net7.0\Dapper.dll</HintPath>
       </Reference>
+      <Reference Include="Discord.Net.Core">
+        <HintPath>..\..\..\..\..\..\..\.nuget\packages\discord.net.core\3.15.3\lib\net6.0\Discord.Net.Core.dll</HintPath>
+      </Reference>
       <Reference Include="Microsoft.Data.Sqlite">
         <HintPath>..\..\..\..\..\..\..\.nuget\packages\microsoft.data.sqlite.core\8.0.6\lib\net8.0\Microsoft.Data.Sqlite.dll</HintPath>
       </Reference>

@@ -15,14 +15,20 @@ internal class CommandRepository(DbContext context)
             @"INSERT INTO stream (subscription_id, status, message_id, viewer_count, start_time)
                 VALUES (@subscriptionId, @status, @messageId, @viewerCount, @startTime)
                 ON CONFLICT (subscription_id) DO UPDATE
-                SET status = @status, message_id = @messageId, viewer_count = @viewerCount, start_time = @startTime, end_time = @endTime", new
+                SET status = @status, 
+                    message_id = @messageId, 
+                    viewer_count = @viewerCount, 
+                    start_time = @startTime, 
+                    end_time = @endTime,
+                    playing = @playing", new
             {
                 subscriptionId = stream.SubscriptionId,
                 status = stream.Status,
                 messageId = stream.MessageId,
                 viewerCount = stream.ViewerCount,
                 startTime = stream.StartTime,
-                endTime = stream.EndTime
+                endTime = stream.EndTime,
+                playing = stream.Playing
             });
     }
 }

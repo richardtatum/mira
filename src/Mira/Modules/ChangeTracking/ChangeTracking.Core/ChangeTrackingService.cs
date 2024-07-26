@@ -59,9 +59,9 @@ internal class ChangeTrackingService(
             .Where(stream => stream.SendUpdateMessage)
             .Select(async stream =>
             {
-                var (messageId, channelId, status, url, viewerCount, duration) = stream.DeconstructIntoUpdateMessage();
+                var (messageId, channelId, status, url, viewerCount, duration, playing) = stream.DeconstructIntoUpdateMessage();
                 await messageService
-                    .ModifyAsync(messageId, channelId, status, url, viewerCount, duration);
+                    .ModifyAsync(messageId, channelId, status, url, viewerCount, duration, playing);
                 return stream;
             });
 
