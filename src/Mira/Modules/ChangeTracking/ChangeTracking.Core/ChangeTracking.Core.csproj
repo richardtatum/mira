@@ -32,4 +32,7 @@
       <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.0" />
     </ItemGroup>
 
+    <ItemGroup>
+        <InternalsVisibleTo Include="ChangeTracking.Tests" />
+    </ItemGroup>
 </Project>

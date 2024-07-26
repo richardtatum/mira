@@ -4,100 +4,78 @@ using Shared.Core;
 
 namespace ChangeTracking.Core.Models;
 
-public class Stream(string hostUrl)
+internal class Stream
 {
-    // Base
-    private string HostUrl { get; } = hostUrl;
+    public Stream(string hostUrl, Subscription subscription, StreamRecord? existingStream, KeySummary? currentStream)
+    {
+        HostUrl = hostUrl;
+        
+        // Subscription
+        SubscriptionId = subscription.Id;
+        StreamKey = subscription.StreamKey;
+        ChannelId = subscription.ChannelId;
+        
+        // Existing Stream. First stream would have no record, so being null is valid
+        ExistingStreamId = existingStream?.Id;
+        ExistingStreamStatus = existingStream?.Status;
+        ExistingStreamMessageId = existingStream?.MessageId;
+        ExistingStreamStartTime = existingStream?.StartTime;
+        ExistingStreamEndTime = existingStream?.EndTime;
+        
+        // Current Stream
+        DetailedStreamStatus = ExistingStreamStatus.ToDetailedStreamStatus(currentStream?.IsLive ?? false);
+        if (currentStream is not null)
+        {
+            CurrentViewerCount = currentStream.ViewerCount;
+            CurrentStartTime = currentStream.StartTime;
+        }
+    }
 
-    // StreamRecord
-    private int? RecordId { get; set; }
-    private StreamStatus? RecordedStatus { get; set; }
-    private ulong? RecordedMessageId { get; set; }
-    private DateTime? RecordedStartTime { get; set; }
-    private DateTime? RecordedEndTime { get; set; }
-    private bool ExistingStreamLoaded { get; set; }
-
-    // Live Stream
-    private int? CurrentViewerCount { get; set; }
-    private DateTime? CurrentStartTime { get; set; }
-    private bool CurrentStreamLoaded { get; set; }
-
-    // Subscription
-    private int SubscriptionId { get; set; }
-    private string StreamKey { get; set; } = null!;
-    private ulong ChannelId { get; set; }
-    private bool SubscriptionLoaded { get; set; }
+    private string HostUrl { get; }
+    private int SubscriptionId { get; }
+    private string StreamKey { get; }
+    private ulong ChannelId { get; }
+    private int? ExistingStreamId { get; }
+    private StreamStatus? ExistingStreamStatus { get; }
+    private ulong? ExistingStreamMessageId { get; }
+    private DateTime? ExistingStreamStartTime { get; }
+    private DateTime? ExistingStreamEndTime { get; }
+    private int? CurrentViewerCount { get; }
+    private DateTime? CurrentStartTime { get; }
+    
 
     // Messaging
     private ulong? MessageId { get; set; }
     private bool MessageSent { get; set; }
 
-    // Meta
-    public StreamStatus Status => DetailedStreamStatus.ToStreamStatus();
-    public DateTime StartTime => DetailedStreamStatus switch
+    // Simplified database stream status. The db only cares about online/offline. Further granularity is to allow for
+    // easy state management in this class (i.e. determine when to send a new message vs update)
+    private StreamStatus Status => DetailedStreamStatus.ToStreamStatus();
+    private DateTime StartTime => DetailedStreamStatus switch
     {
         DetailedStreamStatus.Starting => CurrentStartTime ?? DateTime.UtcNow,
-        _ => RecordedStartTime ?? DateTime.UtcNow
+        _ => ExistingStreamStartTime ?? DateTime.UtcNow
     };
-    public TimeSpan Duration => (EndTime ?? DateTime.UtcNow).Subtract(StartTime);
-    public DateTime? EndTime => DetailedStreamStatus switch
+    private TimeSpan Duration => (EndTime ?? DateTime.UtcNow).Subtract(StartTime);
+    private DateTime? EndTime => DetailedStreamStatus switch
     {
         DetailedStreamStatus.Starting => null,
         DetailedStreamStatus.Live => null,
         DetailedStreamStatus.Ending => DateTime.UtcNow,
-        DetailedStreamStatus.Offline => RecordedEndTime,
+        DetailedStreamStatus.Offline => ExistingStreamEndTime,
         _ => throw new ArgumentOutOfRangeException()
     };
 
-
     // Internal meta
-    private bool IsValid => SubscriptionLoaded && ExistingStreamLoaded && CurrentStreamLoaded;
     private DetailedStreamStatus DetailedStreamStatus { get; set; }
 
     // Offline is the only status we ignore
-    public bool StreamUpdated => IsValid && DetailedStreamStatus != DetailedStreamStatus.Offline;
-    public bool SendNewMessage => IsValid && DetailedStreamStatus == DetailedStreamStatus.Starting;
-    public bool SendUpdateMessage => IsValid && DetailedStreamStatus == DetailedStreamStatus.Live ||
+    public bool StreamUpdated => DetailedStreamStatus != DetailedStreamStatus.Offline;
+    // We only send a new message when a stream is starting
+    public bool SendNewMessage => DetailedStreamStatus == DetailedStreamStatus.Starting;
+    public bool SendUpdateMessage => ExistingStreamMessageId is not null && DetailedStreamStatus == DetailedStreamStatus.Live ||
                                      DetailedStreamStatus == DetailedStreamStatus.Ending;
-
-    public Stream LoadExistingStreamData(StreamRecord? record)
-    {
-        // It's still valid if this data doesn't exist. First ever stream would be without it
-        RecordId = record?.Id;
-        RecordedStatus = record?.Status;
-        RecordedMessageId = record?.MessageId;
-        RecordedStartTime = record?.StartTime;
-        RecordedEndTime = record?.EndTime;
-
-        ExistingStreamLoaded = true;
-        return this;
-    }
-
-    public Stream LoadCurrentStreamData(KeySummary? currentStream)
-    {
-        if (currentStream is null)
-        {
-            DetailedStreamStatus = RecordedStatus.ToDetailedStreamStatus(streamCurrentlyLive: false);
-            CurrentStreamLoaded = true;
-            return this;
-        }
-
-        DetailedStreamStatus = RecordedStatus.ToDetailedStreamStatus(currentStream.IsLive);
-        CurrentViewerCount = currentStream.ViewerCount;
-        CurrentStartTime = currentStream.StartTime;
-        CurrentStreamLoaded = true;
-        return this;
-    }
-
-    public Stream LoadSubscriptionData(Subscription subscription)
-    {
-        SubscriptionId = subscription.Id;
-        StreamKey = subscription.StreamKey;
-        ChannelId = subscription.ChannelId;
-
-        SubscriptionLoaded = true;
-        return this;
-    }
+    
 
     public void MarkMessageSent(ulong messageId)
     {
@@ -126,25 +104,24 @@ public class Stream(string hostUrl)
         }
 
         var url = $"{HostUrl}/{StreamKey}";
-        var duration = (RecordedEndTime ?? DateTime.UtcNow).Subtract(StartTime);
-        return (RecordedMessageId!.Value, ChannelId, Status, url, CurrentViewerCount ?? 0, duration);
+        return (ExistingStreamMessageId!.Value, ChannelId, Status, url, CurrentViewerCount ?? 0, Duration);
     }
 
     // Update this to return with Result<StreamRecord> type?
     public StreamRecord ToStreamRecord()
     {
-        if (RecordedMessageId is null && MessageId is null)
+        if (ExistingStreamMessageId is null && MessageId is null)
         {
             throw new InvalidOperationException(
                 "Can't generate a stream record for a message that has never been sent.");
         }
 
         // We prioritise any new messageIds first
-        var messageId = (MessageId ?? RecordedMessageId)!.Value;
+        var messageId = (MessageId ?? ExistingStreamMessageId)!.Value;
 
         return new StreamRecord
         {
-            Id = RecordId ?? null,
+            Id = ExistingStreamId ?? null,
             SubscriptionId = SubscriptionId,
             Status = DetailedStreamStatus.ToStreamStatus(),
             ViewerCount = CurrentViewerCount ?? 0,

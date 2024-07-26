@@ -5,12 +5,12 @@ using Stream = ChangeTracking.Core.Models.Stream;
 
 namespace ChangeTracking.Core;
 
-public class ChangeTrackingService(
+internal class ChangeTrackingService(
     BroadcastBoxClient client,
     ILogger<ChangeTrackingService> logger,
     QueryRepository query,
     CommandRepository command,
-    IMessageService messageService) : IChangeTrackingService // This seems wrong, having polling rely on the message service
+    IMessageService messageService) : IChangeTrackingService
 {
     public async Task ExecuteAsync(string hostUrl)
     {
@@ -32,15 +32,12 @@ public class ChangeTrackingService(
             {
                 var existingStream = existingStreams.FirstOrDefault(x => x.SubscriptionId == sub.Id);
                 var currentStream = currentStreams.FirstOrDefault(x => x.StreamKey == sub.StreamKey);
-
-                return new Stream(hostUrl)
-                    .LoadSubscriptionData(sub)
-                    .LoadExistingStreamData(existingStream)
-                    .LoadCurrentStreamData(currentStream);
+                return new Stream(hostUrl, sub, existingStream, currentStream);
             })
             .ToArray();
 
         var streamUpdates = streams.Where(stream => stream.StreamUpdated).ToArray();
+        logger.LogInformation("[CHANGE-TRACKING][{Host}] {StreamUpdates} update(s) found.", hostUrl, streamUpdates.Length);
 
         var newMessageTasks = streamUpdates
             .Where(stream => stream.SendNewMessage)

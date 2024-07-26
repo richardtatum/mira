@@ -4,7 +4,7 @@ using Shared.Core;
 
 namespace ChangeTracking.Core.Repositories;
 
-public class QueryRepository(DbContext context)
+internal class QueryRepository(DbContext context)
 {
     internal async Task<Subscription[]> GetSubscriptionsAsync(string hostUrl)
     {
