@@ -147,7 +147,7 @@ public class SlashCommand(QueryRepository queryRepository, CommandRepository com
 
         var successEmbed =
             GenerateSuccessEmbed(
-                $"New subscription added for `{url}`! \n Notifications will be sent to this channel when the stream goes live.");
+                $"New subscription added for `{url}`! \n\n Notifications will be sent to this channel when the stream goes live.");
         await component.InteractionChannel.SendMessageAsync(embed: successEmbed);
     }
     
