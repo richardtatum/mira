@@ -5,13 +5,18 @@ namespace Commands.Core.Playing.Repositories;
 
 public class CommandRepository(DbContext context)
 {
-    public async Task<bool> SetPlayingAsync(int streamId, string playing)
+    public async Task<bool> SetPlayingAsync(string streamKey, string playing)
     {
         using var connection = context.CreateConnection();
         var result = await connection.ExecuteAsync(
-            @"UPDATE stream SET playing = @playing WHERE id = @streamId", new
+            @"UPDATE stream SET playing = @playing
+                WHERE id IN (
+                    SELECT id
+                    FROM subscription
+                    WHERE stream_key = @streamKey
+                )", new
             {
-                streamId,
+                streamKey,
                 playing
             });
 

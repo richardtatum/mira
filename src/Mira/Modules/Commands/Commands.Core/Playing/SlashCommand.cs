@@ -106,7 +106,8 @@ public class SlashCommand(QueryRepository queryRepository, CommandRepository com
             return;
         }
 
-        var updated = await commandRepository.SetPlayingAsync(streamId, playing);
+        // TODO: Consider the fact that this allows any user on any server where the subscription is active to override all servers `playing` status
+        var updated = await commandRepository.SetPlayingAsync(stream.Key, playing);
         if (!updated)
         {
             logger.LogCritical("[SLASH-COMMAND][{Name}] Failed to update the stream with the new playing value. StreamId: {Id}, Playing value: {Playing}", Name, streamId, playing);
