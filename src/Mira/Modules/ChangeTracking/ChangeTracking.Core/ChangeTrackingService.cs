@@ -32,11 +32,7 @@ internal class ChangeTrackingService(
             {
                 var existingStream = existingStreams.FirstOrDefault(x => x.SubscriptionId == sub.Id);
                 var currentStream = currentStreams.FirstOrDefault(x => x.StreamKey == sub.StreamKey);
-
-                return new Stream(hostUrl)
-                    .LoadSubscriptionData(sub)
-                    .LoadExistingStreamData(existingStream)
-                    .LoadCurrentStreamData(currentStream);
+                return new Stream(hostUrl, sub, existingStream, currentStream);
             })
             .ToArray();
 
