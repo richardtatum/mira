@@ -35,8 +35,11 @@ The `add-host` command allows a user to add a new Broadcast Box host and choose 
 #### /subscribe
 The `subscribe` command allows a user to subscribe to changes to a provided stream key on a selected host. When a stream starts on the given host/key, a notification will be sent to the channel the subscription was requested from.
 
+### /playing
+The `playing` command allows a user to set a text value for the 'Currently Playing' section of any live stream. This can be set multiple times to reflect the change in content during a stream, with each new value overriding the last.
+
 #### /unsubscribe
-The `unsubscribe` command allows a user to choose a subscription to remove from the channel from a list of available subscriptions.
+The `unsubscribe` command allows a user to choose a subscription to remove from a list of available subscriptions.
 
 #### /list
 The `list` command provides a list of all registered hosts and their subscribed keys.
@@ -47,13 +50,14 @@ The `remove-host` command allows a user to choose a host to remove, along with a
 ## Todo
 There are still many things to do before this can be considered complete, including but not limited to:
 - ~~Add a hosted version that can be added to any server with a simple click~~
+- ~~Cleanup the current response embeds~~
+- ~~Improve the development experience~~
+- ~~Various improvements to the layout of the code~~
+- Add tests (in progress)
 - Add support for restricting access to the add and remove commands
 - Add support for retrieving the last sent frame and using it as the thumbnail for the stream
+- Add support for integrating with the [IGDB](https://www.igdb.com/) additional 'Currently Playing' metadata
 - Add regular backups
-- Add tests
-- Cleanup the current response embeds
-- Improve the development experience
-- Various improvements to the layout of the code
 
 ## References
 - [Discord.NET](https://docs.discordnet.dev/index.html) 
