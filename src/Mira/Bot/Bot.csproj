@@ -44,6 +44,7 @@
       <ProjectReference Include="..\Modules\Commands\Commands.Core\Commands.Core.csproj" />
       <ProjectReference Include="..\Modules\Messaging\Messaging.Core\Messaging.Core.csproj" />
       <ProjectReference Include="..\Modules\Polling\Polling.Core\Polling.Core.csproj" />
+      <ProjectReference Include="..\Modules\Snapshot\Snapshot.Core\Snapshot.Core.csproj" />
     </ItemGroup>
 
 </Project>
