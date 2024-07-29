@@ -38,7 +38,7 @@ internal class ChangeTrackingService(
                 // Register events
                 stream.OnSendNewMessage += messageService.SendAsync;
                 stream.OnSendUpdateMessage += messageService.ModifyAsync;
-                stream.OnStateChange += command.UpsertStreamRecord;
+                stream.OnRecordStateChange += command.UpsertStreamRecord;
 
                 // Fire events
                 await stream.FireEventsAsync();

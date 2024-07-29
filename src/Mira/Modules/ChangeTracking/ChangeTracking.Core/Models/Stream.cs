@@ -34,7 +34,7 @@ internal class Stream
 
     public event SendNewMessageHandler? OnSendNewMessage;
     public event SendUpdatedMessageHandler? OnSendUpdateMessage;
-    public event Func<StreamRecord, Task>? OnStateChange; 
+    public event Func<StreamRecord, Task>? OnRecordStateChange; 
     public delegate Task<ulong?> SendNewMessageHandler(ulong channelId, StreamStatus status, string url, int viewerCount, TimeSpan duration, string? playing = null);
     public delegate Task SendUpdatedMessageHandler(ulong messageId, ulong channelId, StreamStatus status, string url, int viewerCount, TimeSpan duration, string? playing = null);
     
@@ -126,10 +126,10 @@ internal class Stream
             await OnSendUpdateMessage.Invoke(ExistingStreamMessageId!.Value, ChannelId, Status, Url, CurrentViewerCount ?? 0, Duration, Playing);
         }
 
-        if (RecordStateChange && OnStateChange is not null)
+        if (RecordStateChange && OnRecordStateChange is not null)
         {
             var record = ToStreamRecord();
-            await OnStateChange.Invoke(record);
+            await OnRecordStateChange.Invoke(record);
         }
     }
 }
