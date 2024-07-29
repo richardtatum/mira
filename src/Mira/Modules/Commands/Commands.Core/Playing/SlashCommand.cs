@@ -11,9 +11,9 @@ public class SlashCommand(QueryRepository queryRepository, CommandRepository com
     : ISlashCommand, ISelectable
 {
     public string Name => "playing";
-    public string PlayingOptionName = "playing";
-    public char Divider = ':';
-    
+    private const string PlayingOptionName = "playing";
+    private const char Divider = ':';
+
     public ApplicationCommandProperties BuildCommand() => 
         new SlashCommandBuilder()
             .WithName(Name)
