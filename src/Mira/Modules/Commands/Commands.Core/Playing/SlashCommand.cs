@@ -117,10 +117,12 @@ public class SlashCommand(QueryRepository queryRepository, CommandRepository com
             return;
         }
         
+        logger.LogInformation("[SLASH-COMMAND][{Name}] User {User}({UserId}) updated the stream key {streamKey} to playing: {playing}", Name, component.User.Username, component.User.Id, stream.Key, playing);
+        
         // Clear the original component
         await component.ModifyOriginalResponseAsync(message =>
         {
-            message.Content = $"Update requested for `{stream.Url}`";
+            message.Content = $"Updating `{stream.Url}`, setting playing: {playing}";
             message.Components = new ComponentBuilder().Build();
         });
 
