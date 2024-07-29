@@ -28,48 +28,23 @@ internal class ChangeTrackingService(
         var existingStreams = await query.GetStreamsAsync(subscriptions.Select(x => x.Id));
 
         var streams = subscriptions
-            .Select(sub =>
+            .Select(async subscription =>
             {
-                var existingStream = existingStreams.FirstOrDefault(x => x.SubscriptionId == sub.Id);
-                var currentStream = currentStreams.FirstOrDefault(x => x.StreamKey == sub.StreamKey);
-                return new Stream(hostUrl, sub, existingStream, currentStream);
+                // Create the stream object which manages the state and any changes
+                var existingStream = existingStreams.FirstOrDefault(x => x.SubscriptionId == subscription.Id);
+                var currentStream = currentStreams.FirstOrDefault(x => x.StreamKey == subscription.StreamKey);
+                var stream = new Stream(hostUrl, subscription, existingStream, currentStream);
+                
+                // Register events
+                stream.OnSendNewMessage += messageService.SendAsync;
+                stream.OnSendUpdateMessage += messageService.ModifyAsync;
+                stream.OnStateChange += command.UpsertStreamRecord;
+
+                // Fire events
+                await stream.FireEventsAsync();
             })
             .ToArray();
 
-        var streamUpdates = streams.Where(stream => stream.StreamUpdated).ToArray();
-        logger.LogInformation("[CHANGE-TRACKING][{Host}] {StreamUpdates} update(s) found.", hostUrl, streamUpdates.Length);
-
-        var newMessageTasks = streamUpdates
-            .Where(stream => stream.SendNewMessage)
-            .Select(async stream =>
-            {
-                var (channelId, status, url, viewerCount, duration) = stream.DeconstructIntoNewMessage();
-                var messageId = await messageService
-                    .SendAsync(channelId, status, url, viewerCount, duration);
-
-                if (messageId is not null)
-                {
-                    stream.MarkMessageSent(messageId.Value);
-                }
-
-                return stream;
-            });
-
-        var updateMessageTasks = streamUpdates
-            .Where(stream => stream.SendUpdateMessage)
-            .Select(async stream =>
-            {
-                var (messageId, channelId, status, url, viewerCount, duration, playing) = stream.DeconstructIntoUpdateMessage();
-                await messageService
-                    .ModifyAsync(messageId, channelId, status, url, viewerCount, duration, playing);
-                return stream;
-            });
-
-        streamUpdates = await Task.WhenAll(newMessageTasks.Union(updateMessageTasks));
-
-        var upsertRecordsTasks = streamUpdates
-            .Select(stream => command.UpsertStreamRecord(stream.ToStreamRecord()));
-
-        await Task.WhenAll(upsertRecordsTasks);
+        await Task.WhenAll(streams);
     }
 }
