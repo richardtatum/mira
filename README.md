@@ -35,7 +35,7 @@ The `add-host` command allows a user to add a new Broadcast Box host and choose 
 #### /subscribe
 The `subscribe` command allows a user to subscribe to changes to a provided stream key on a selected host. When a stream starts on the given host/key, a notification will be sent to the channel the subscription was requested from.
 
-### /playing
+#### /playing
 The `playing` command allows a user to set a text value for the 'Currently Playing' section of any live stream. This can be set multiple times to reflect the change in content during a stream, with each new value overriding the last.
 
 #### /unsubscribe
@@ -44,7 +44,7 @@ The `unsubscribe` command allows a user to choose a subscription to remove from 
 #### /list
 The `list` command provides a list of all registered hosts and their subscribed keys.
 
-### /remove-host
+#### /remove-host
 The `remove-host` command allows a user to choose a host to remove, along with any relevant subscriptions.
 
 ## Todo

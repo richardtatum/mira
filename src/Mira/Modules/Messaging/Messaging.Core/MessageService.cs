@@ -29,14 +29,14 @@ public class MessageService(DiscordSocketClient discord, ILogger<MessageService>
         return message.Id;
     }
 
-    public async Task<ulong?> ModifyAsync(ulong messageId, ulong channelId, StreamStatus status, string url, int viewers, TimeSpan duration, string? playing)
+    public async Task ModifyAsync(ulong messageId, ulong channelId, StreamStatus status, string url, int viewers, TimeSpan duration, string? playing)
     {
         // TODO: Check validity off messageId too
         var channel = GetChannel(channelId);
         if (channel is null)
         {
             logger.LogCritical("[MESSAGE-SERVICE] Failed to retrieve channel for stream {Url}. Channel: {Channel}", url, channelId);
-            return null;
+            return;
         }
         
         var embed = status switch
@@ -46,8 +46,7 @@ public class MessageService(DiscordSocketClient discord, ILogger<MessageService>
             _ => throw new ArgumentOutOfRangeException(nameof(status), status, null)
         };
 
-        var message = await channel.ModifyMessageAsync(messageId, properties => properties.Embed = embed);
-        return message.Id;
+        await channel.ModifyMessageAsync(messageId, properties => properties.Embed = embed);
     }
 
     private IMessageChannel? GetChannel(ulong channelId) => discord.GetChannel(channelId) as IMessageChannel;
