@@ -484,6 +484,60 @@ public class StreamTests
         Assert.True(eventRaised);
         Assert.Equal(newMessageId, recordedMessageId);
     }
+    
+    [Fact]
+    public async Task OnRecordStateChange_ShouldNullPlaying_WhenNewStreamIsStarting()
+    {
+        var hostUrl = "exampleHostUrl";
+        var newMessageId = 54321UL;
+        var eventRaised = false;
+        ulong? recordedMessageId = null;
+        string? recordedPlayingStatus = null;
+        
+        var subscription = new Subscription
+        {
+            Id = 1,
+            StreamKey = "streamkey",
+            ChannelId = 54321
+        };
+        
+        // Old offline record
+        var existingStream = new StreamRecord
+        {
+            Id = 1,
+            MessageId = 12345,
+            SubscriptionId = 1,
+            StartTime = new DateTime(2020, 03, 11),
+            EndTime = new DateTime(2020, 03, 12),
+            Status = StreamStatus.Offline,
+            Playing = "Existing Playing Status"
+        };
+
+        // New live stream
+        var currentStream = new KeySummary
+        {
+            VideoStreams = [
+                new VideoStream { LastKeyFrameSeen = DateTime.UtcNow }
+            ]
+        };
+
+        var stream = new Stream(hostUrl, subscription, existingStream, currentStream);
+        stream.OnSendNewMessage += (_, _, _, _, _, _) => Task.FromResult((ulong?)54321);
+        stream.OnRecordStateChange += record =>
+        {
+            eventRaised = true;
+            recordedMessageId = record.MessageId;
+            recordedPlayingStatus = record.Playing;
+            
+            return Task.CompletedTask;
+        };
+
+        await stream.FireEventsAsync();
+
+        Assert.True(eventRaised);
+        Assert.Equal(newMessageId, recordedMessageId);
+        Assert.Null(recordedPlayingStatus);
+    }
 
     [Fact]
     public async Task ToStreamRecord_ShouldUseExistingMessageId_WhenStreamIsUpdating()
