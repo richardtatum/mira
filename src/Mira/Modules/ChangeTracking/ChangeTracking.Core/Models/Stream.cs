@@ -98,7 +98,7 @@ internal class Stream
         var messageId = (MessageId ?? ExistingStreamMessageId)!.Value;
 
         // Ensure all new streams start with an empty playing
-        var playing = SendNewMessage ? null : Playing;
+        var playing = DetailedStreamStatus == DetailedStreamStatus.Starting ? null : Playing;
 
         return new StreamRecord
         {
