@@ -34,8 +34,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Snapshot", "Snapshot", "{D2
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Snapshot.Core", "Modules\Snapshot\Snapshot.Core\Snapshot.Core.csproj", "{A0324B12-EFB5-4710-A0E4-8736677DFA4D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WhepIntercept", "WhepIntercept\WhepIntercept.csproj", "{B0D7158C-419A-4AA1-86FE-E00FB7146B59}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -78,10 +76,6 @@ Global
 		{A0324B12-EFB5-4710-A0E4-8736677DFA4D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A0324B12-EFB5-4710-A0E4-8736677DFA4D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A0324B12-EFB5-4710-A0E4-8736677DFA4D}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B0D7158C-419A-4AA1-86FE-E00FB7146B59}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B0D7158C-419A-4AA1-86FE-E00FB7146B59}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B0D7158C-419A-4AA1-86FE-E00FB7146B59}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B0D7158C-419A-4AA1-86FE-E00FB7146B59}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{50CF3BD3-8391-4E16-8FFA-8091D6A50DB0} = {4CA07424-AA5F-432B-B42A-0DC0AB98EF17}
