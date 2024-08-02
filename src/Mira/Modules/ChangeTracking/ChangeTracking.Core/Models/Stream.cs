@@ -35,8 +35,8 @@ internal class Stream
     public event SendNewMessageHandler? OnSendNewMessage;
     public event SendUpdatedMessageHandler? OnSendUpdateMessage;
     public event Func<StreamRecord, Task>? OnRecordStateChange; 
-    public delegate Task<ulong?> SendNewMessageHandler(ulong channelId, StreamStatus status, string url, int viewerCount, TimeSpan duration, string? playing = null);
-    public delegate Task SendUpdatedMessageHandler(ulong messageId, ulong channelId, StreamStatus status, string url, int viewerCount, TimeSpan duration, string? playing = null);
+    public delegate Task<ulong?> SendNewMessageHandler(ulong channelId, StreamStatus status, string url, int viewerCount, TimeSpan duration, string? playing = null, string? filePath = null);
+    public delegate Task SendUpdatedMessageHandler(ulong messageId, ulong channelId, StreamStatus status, string url, int viewerCount, TimeSpan duration, string? playing = null, string? filePath = null);
     
     private string HostUrl { get; }
     private int SubscriptionId { get; }

@@ -31,7 +31,7 @@ public class StreamTests
 
         var stream = new Stream(hostUrl, subscription, null, currentStream);
 
-        stream.OnSendNewMessage += (eventChannelId, _, _, eventViewers, _, _) =>
+        stream.OnSendNewMessage += (eventChannelId, _, _, eventViewers, _, _, _) =>
         {
             eventRaised = true;
             channelId = eventChannelId;
@@ -78,7 +78,7 @@ public class StreamTests
         };
         
         var stream = new Stream(hostUrl, subscription, existingStream, currentStream);
-        stream.OnSendNewMessage += (_, _, _, _, _, _) =>
+        stream.OnSendNewMessage += (_, _, _, _, _, _, _) =>
         {
             eventRaised = true;
             return Task.FromResult((ulong?)12345);
@@ -123,7 +123,7 @@ public class StreamTests
         };
         
         var stream = new Stream(hostUrl, subscription, existingStream, currentStream);
-        stream.OnSendUpdateMessage += (eventMessageId, _, eventStatus, _, eventViewerCount, _, _) =>
+        stream.OnSendUpdateMessage += (eventMessageId, _, eventStatus, _, eventViewerCount, _, _, _) =>
         {
             eventRaised = true;
             messageId = eventMessageId;
@@ -168,7 +168,7 @@ public class StreamTests
         var currentStream = new KeySummary();
 
         var stream = new Stream(hostUrl, subscription, existingStream, currentStream);
-        stream.OnSendUpdateMessage += (eventMessageId, channelId, eventStatus, url, count, duration, playing) =>
+        stream.OnSendUpdateMessage += (eventMessageId, _, eventStatus, _, _, _, _, _) =>
         {
             eventRaised = true;
             messageId = eventMessageId;
@@ -207,7 +207,7 @@ public class StreamTests
         var currentStream = new KeySummary();
 
         var stream = new Stream(hostUrl, subscription, existingStream, currentStream);
-        stream.OnSendUpdateMessage += (_, _, _, _, _, _, _) =>
+        stream.OnSendUpdateMessage += (_, _, _, _, _, _, _, _) =>
         {
             eventRaised = true;
             return Task.CompletedTask;
@@ -244,7 +244,7 @@ public class StreamTests
         };
 
         var stream = new Stream(hostUrl, subscription, existingStream, currentStream);
-        stream.OnSendUpdateMessage += (_, _, _, _, _, _, _) =>
+        stream.OnSendUpdateMessage += (_, _, _, _, _, _, _, _) =>
         {
             eventRaised = true;
             return Task.CompletedTask;
@@ -283,7 +283,7 @@ public class StreamTests
         };
 
         var stream = new Stream(hostUrl, subscription, existingStream, currentStream);
-        stream.OnSendNewMessage += (_, _, _, _, _, _) => Task.FromResult((ulong?)messageId);
+        stream.OnSendNewMessage += (_, _, _, _, _, _, _) => Task.FromResult((ulong?)messageId);
         
         stream.OnRecordStateChange += record =>
         {
@@ -417,7 +417,7 @@ public class StreamTests
         };
 
         var stream = new Stream(hostUrl, subscription, existingStream, currentStream);
-        stream.OnSendNewMessage += (_, _, _, _, _, _) => Task.FromResult((ulong?)54321);
+        stream.OnSendNewMessage += (_, _, _, _, _, _, _) => Task.FromResult((ulong?)54321);
         stream.OnRecordStateChange += record =>
         {
             eventRaised = true;
@@ -470,7 +470,7 @@ public class StreamTests
         };
 
         var stream = new Stream(hostUrl, subscription, existingStream, currentStream);
-        stream.OnSendNewMessage += (_, _, _, _, _, _) => Task.FromResult((ulong?)54321);
+        stream.OnSendNewMessage += (_, _, _, _, _, _, _) => Task.FromResult((ulong?)54321);
         stream.OnRecordStateChange += record =>
         {
             eventRaised = true;
@@ -514,7 +514,7 @@ public class StreamTests
         var currentStream = new KeySummary();
 
         var stream = new Stream(hostUrl, subscription, existingStream, currentStream);
-        stream.OnSendUpdateMessage += (id, channelId, status, url, count, duration, playing) => Task.CompletedTask;
+        stream.OnSendUpdateMessage += (_, _, _, _, _, _, _, _) => Task.CompletedTask;
         stream.OnRecordStateChange += record =>
         {
             eventRaised = true;
@@ -565,7 +565,7 @@ public class StreamTests
         };
 
         var stream = new Stream(hostUrl, subscription, existingStream, currentStream);
-        stream.OnSendUpdateMessage += (id, channelId, status, url, count, duration, playing) => Task.CompletedTask;
+        stream.OnSendUpdateMessage += (_, _, _, _, _, _, _, _) => Task.CompletedTask;
         stream.OnRecordStateChange += record =>
         {
             eventRaised = true;
