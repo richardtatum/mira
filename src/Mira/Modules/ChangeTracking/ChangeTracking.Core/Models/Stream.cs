@@ -22,6 +22,7 @@ internal class Stream
         ExistingStreamStartTime = existingStream?.StartTime;
         ExistingStreamEndTime = existingStream?.EndTime;
         Playing = existingStream?.Playing;
+        Snapshot = existingStream?.Snapshot;
         
         // Current Stream
         DetailedStreamStatus = ExistingStreamStatus.ToDetailedStreamStatus(currentStream?.IsLive ?? false);
@@ -35,8 +36,8 @@ internal class Stream
     public event SendNewMessageHandler? OnSendNewMessage;
     public event SendUpdatedMessageHandler? OnSendUpdateMessage;
     public event Func<StreamRecord, Task>? OnRecordStateChange; 
-    public delegate Task<ulong?> SendNewMessageHandler(ulong channelId, StreamStatus status, string url, int viewerCount, TimeSpan duration, string? playing = null, string? filePath = null);
-    public delegate Task SendUpdatedMessageHandler(ulong messageId, ulong channelId, StreamStatus status, string url, int viewerCount, TimeSpan duration, string? playing = null, string? filePath = null);
+    public delegate Task<ulong?> SendNewMessageHandler(ulong channelId, StreamStatus status, string url, int viewerCount, TimeSpan duration, string? playing = null, byte[]? attachment = null);
+    public delegate Task SendUpdatedMessageHandler(ulong messageId, ulong channelId, StreamStatus status, string url, int viewerCount, TimeSpan duration, string? playing = null, byte[]? attachment = null);
     
     private string HostUrl { get; }
     private int SubscriptionId { get; }
@@ -48,6 +49,7 @@ internal class Stream
     private DateTime? ExistingStreamStartTime { get; }
     private DateTime? ExistingStreamEndTime { get; }
     private string? Playing { get; set; }
+    private byte[]? Snapshot { get; set; }
     private int? CurrentViewerCount { get; }
     private DateTime? CurrentStartTime { get; }
     
@@ -97,8 +99,9 @@ internal class Stream
         // We prioritise any new messageIds first
         var messageId = (MessageId ?? ExistingStreamMessageId)!.Value;
 
-        // Ensure all new streams start with an empty playing
+        // Ensure all new streams start with an empty playing and snapshot
         var playing = DetailedStreamStatus == DetailedStreamStatus.Starting ? null : Playing;
+        var snapshot = DetailedStreamStatus == DetailedStreamStatus.Starting ? null : Snapshot;
 
         return new StreamRecord
         {
@@ -109,7 +112,8 @@ internal class Stream
             MessageId = messageId,
             StartTime = StartTime,
             EndTime = EndTime,
-            Playing = playing
+            Playing = playing,
+            Snapshot = snapshot
         };
     }
 
@@ -123,7 +127,8 @@ internal class Stream
 
         if (SendUpdateMessage && OnSendUpdateMessage is not null)
         {
-            await OnSendUpdateMessage.Invoke(ExistingStreamMessageId!.Value, ChannelId, Status, Url, CurrentViewerCount ?? 0, Duration, Playing);
+            var snapshot = DetailedStreamStatus == DetailedStreamStatus.Ending ? null : Snapshot;
+            await OnSendUpdateMessage.Invoke(ExistingStreamMessageId!.Value, ChannelId, Status, Url, CurrentViewerCount ?? 0, Duration, Playing, snapshot);
         }
 
         if (RecordStateChange && OnRecordStateChange is not null)

@@ -10,6 +10,7 @@ using Microsoft.Extensions.Hosting;
 using Mira;
 using Polling.Core;
 using Shared.Core;
+using Snapshot.Core;
 
 var config = new DiscordSocketConfig
 {
@@ -28,6 +29,7 @@ var host = Host.CreateDefaultBuilder()
         services.AddChangeTracking();
         services.AddMessagingService();
         services.AddCleanupServices();
+        services.AddSnapshotService();
     })
     .Build();
 

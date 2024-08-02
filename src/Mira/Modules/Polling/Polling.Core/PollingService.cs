@@ -11,6 +11,7 @@ namespace Polling.Core;
 public class PollingService(
     QueryRepository query,
     IChangeTrackingService service,
+    ISnapshotService snapshotService,
     ILogger<PollingService> logger,
     IOptions<PollingOptions> options)
     : BackgroundService
@@ -59,7 +60,7 @@ public class PollingService(
         using var timer = new PeriodicTimer(host.PollInterval);
         do
         {
-            await service.ExecuteAsync(host.Url);
+            await Task.WhenAll(service.ExecuteAsync(host.Url), snapshotService.ExecuteAsync(host.Url, stoppingToken));
             await timer.WaitForNextTickAsync(stoppingToken);
         } while (!stoppingToken.IsCancellationRequested);
     }

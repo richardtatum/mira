@@ -8,7 +8,7 @@ namespace Messaging.Core;
 
 public class MessageService(DiscordSocketClient discord, ILogger<MessageService> logger) : IMessageService
 {
-    public async Task<ulong?> SendAsync(ulong channelId, StreamStatus status, string url, int viewers, TimeSpan duration, string? playing = null, string? filePath = null)
+    public async Task<ulong?> SendAsync(ulong channelId, StreamStatus status, string url, int viewers, TimeSpan duration, string? playing = null, byte[]? image = null)
     {
         var channel = GetChannel(channelId);
         if (channel is null)
@@ -17,24 +17,29 @@ public class MessageService(DiscordSocketClient discord, ILogger<MessageService>
             return null;
         }
 
-        var imageName = Path.GetFileName(filePath);
+        var imageName = "image.webp";
 
         // We are never sending a new offline message, should this be simplified?
         var embed = status switch
         {
             StreamStatus.Live => MessageEmbed.Live(url, viewers, duration, playing, imageName),
-            StreamStatus.Offline => MessageEmbed.Offline(url, duration, playing),
+            StreamStatus.Offline => MessageEmbed.Offline(url, duration, playing, imageName),
             _ => throw new ArgumentOutOfRangeException(nameof(status), status, null)
         };
 
-        var message = filePath is null
-            ? await channel.SendMessageAsync(embed: embed) 
-            : await channel.SendFileAsync(filePath, embed: embed);
+        if (image is null)
+        {
+            var message = await channel.SendMessageAsync(embed: embed);
+            return message.Id;
+        }
 
-        return message.Id;
+        using var stream = new MemoryStream(image);
+        var fileMessage = await channel.SendFileAsync(stream, imageName, embed: embed);
+
+        return fileMessage.Id;
     }
 
-    public async Task ModifyAsync(ulong messageId, ulong channelId, StreamStatus status, string url, int viewers, TimeSpan duration, string? playing = null, string? filePath = null)
+    public async Task ModifyAsync(ulong messageId, ulong channelId, StreamStatus status, string url, int viewers, TimeSpan duration, string? playing = null, byte[]? image = null)
     {
         // TODO: Check validity off messageId too
         var channel = GetChannel(channelId);
@@ -44,24 +49,40 @@ public class MessageService(DiscordSocketClient discord, ILogger<MessageService>
             return;
         }
         
-        var imageName = Path.GetFileName(filePath);
+        var imageName = "image.webp";
         
         var embed = status switch
         {
             StreamStatus.Live => MessageEmbed.Live(url, viewers, duration, playing, imageName),
-            StreamStatus.Offline => MessageEmbed.Offline(url, duration, playing, null),
+            StreamStatus.Offline => MessageEmbed.Offline(url, duration, playing, imageName),
             _ => throw new ArgumentOutOfRangeException(nameof(status), status, null)
         };
-        
-        var attachments = filePath is null
-            ? Array.Empty<FileAttachment>()
-            : [new FileAttachment(filePath)];
-        
-        await channel.ModifyMessageAsync(messageId, properties =>
+
+        try
         {
-            properties.Embed = embed;
-            properties.Attachments = attachments;
-        });
+            if (image is null)
+            {
+                await channel.ModifyMessageAsync(messageId, properties =>
+                {
+                    properties.Embed = embed;
+                    properties.Attachments = Array.Empty<FileAttachment>();
+                });
+                return;
+            }
+            
+            using var stream = new MemoryStream(image);
+            var attachments = new FileAttachment[] { new (stream, imageName) };
+            await channel.ModifyMessageAsync(messageId, properties =>
+            {
+                properties.Embed = embed;
+                properties.Attachments = attachments;
+            });
+        }
+        catch (Exception ex)
+        {
+            logger.LogCritical("[MESSAGE-SERVICE] Message Failed to Update: {Ex}", ex);
+            throw;
+        }
     }
 
     private IMessageChannel? GetChannel(ulong channelId) => discord.GetChannel(channelId) as IMessageChannel;

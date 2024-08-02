@@ -12,7 +12,21 @@
       <PackageReference Include="SIPSorceryMedia" Version="3.0.1" />
       <PackageReference Include="SIPSorceryMedia.Abstractions" Version="1.2.1" />
       <PackageReference Include="SIPSorceryMedia.Encoders" Version="0.0.13" />
+      <PackageReference Include="SixLabors.ImageSharp" Version="3.1.5" />
       <PackageReference Include="SkiaSharp" Version="2.88.8" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Reference Include="Microsoft.Extensions.Options">
+        <HintPath>..\..\..\..\..\..\..\.nuget\packages\microsoft.extensions.options\8.0.0\lib\net8.0\Microsoft.Extensions.Options.dll</HintPath>
+      </Reference>
+      <Reference Include="SIPSorceryMedia.FFmpeg">
+        <HintPath>..\..\..\..\..\..\..\.nuget\packages\sipsorcerymedia.ffmpeg\1.4.1\lib\net8.0\SIPSorceryMedia.FFmpeg.dll</HintPath>
+      </Reference>
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\Shared\Shared.Core\Shared.Core.csproj" />
     </ItemGroup>
 
 </Project>

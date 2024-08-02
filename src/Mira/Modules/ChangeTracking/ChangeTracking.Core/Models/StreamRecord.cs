@@ -12,4 +12,5 @@ internal class StreamRecord
     public DateTime StartTime { get; set; }
     public DateTime? EndTime { get; set; }
     public string? Playing { get; set; }
+    public byte[]? Snapshot { get; set; }
 }

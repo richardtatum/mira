@@ -34,7 +34,8 @@ internal class QueryRepository(DbContext context)
                     start_time startTime,
                     end_time endTime,
                     message_id messageId,
-                    playing
+                    playing,
+                    snapshot
                 FROM stream s
                 WHERE s.subscription_id in @subscriptionIds ", new
             {
