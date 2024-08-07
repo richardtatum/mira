@@ -20,7 +20,8 @@ internal class CommandRepository(DbContext context)
                     viewer_count = @viewerCount, 
                     start_time = @startTime, 
                     end_time = @endTime,
-                    playing = @playing", new
+                    playing = @playing,
+                    snapshot = @snapshot", new
             {
                 subscriptionId = stream.SubscriptionId,
                 status = stream.Status,
@@ -28,7 +29,8 @@ internal class CommandRepository(DbContext context)
                 viewerCount = stream.ViewerCount,
                 startTime = stream.StartTime,
                 endTime = stream.EndTime,
-                playing = stream.Playing
+                playing = stream.Playing,
+                snapshot = stream.Snapshot
             });
     }
 }

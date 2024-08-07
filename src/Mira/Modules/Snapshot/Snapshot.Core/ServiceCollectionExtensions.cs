@@ -9,7 +9,10 @@ public static class ServiceCollectionExtensions
     {
         services.AddTransient<CommandRepository>();
         services.AddTransient<QueryRepository>();
+        services.AddTransient<BroadcastBoxHttpClient>();
+        services.AddTransient<ImageProcessor>();
         services.AddTransient<ISnapshotService, SnapShotService>();
+        services.AddTransient<IWhepConnectionFactory, BroadcastBoxWhepConnectionFactory>();
         services.AddOptions<SnapshotOptions>().BindConfiguration(nameof(SnapshotOptions));
     }
 }
