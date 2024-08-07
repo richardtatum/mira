@@ -101,6 +101,8 @@ internal class Stream
 
         // Ensure all new streams start with an empty playing and snapshot
         var playing = DetailedStreamStatus == DetailedStreamStatus.Starting ? null : Playing;
+        
+        // I need to clear this snapshot on stream starting, but otherwise don't want to update the record if not required
         var snapshot = DetailedStreamStatus == DetailedStreamStatus.Starting ? null : Snapshot;
 
         return new StreamRecord
