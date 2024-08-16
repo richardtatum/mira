@@ -14,11 +14,12 @@ public class SubscriptionTracker(ILogger logger)
         return cancellationSource.Token;
     }
     
-    public async Task Unsubscribe(string hostUrl)
+    public async Task UnsubscribeAsync(string hostUrl)
     {
         if (!_subscriptions.TryGetValue(hostUrl, out var cancellationTokenSource))
         {
-            throw new InvalidOperationException($"Unable to find subscription under key: {hostUrl}");
+            logger.LogError("[SUBSCRIPTION-TRACKER] Unable to find subscribed host with url: {Host}.", hostUrl);
+            return;
         }
 
         await cancellationTokenSource.CancelAsync();

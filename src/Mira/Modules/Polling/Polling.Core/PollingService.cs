@@ -27,17 +27,27 @@ public class PollingService(
             
             foreach (var host in hosts)
             {
-                if (subscribedHosts.Contains(host.Url))
+                try
                 {
-                    continue;
+                    if (subscribedHosts.Contains(host.Url))
+                    {
+                        continue;
+                    }
+
+                    logger.LogInformation(
+                        "[HOST-POLLING] New host found: {Host}. Creating subscription. Interval: {Seconds}s", host.Url,
+                        host.PollIntervalSeconds);
+
+                    var cancellationToken = subscribedHosts.Register(host.Url, stoppingToken);
+                    _ = SubscribeToHostAsync(host, cancellationToken);
+                }
+                catch (Exception e)
+                {
+                    logger.LogError("[HOST-POLLING][{Host}] Error caught subscribing to host. Attempting to unsubscribe.", host.Url);
+                    logger.LogError("[HOST-POLLING][{Host}] Error message: {Error}", host.Url, e.Message);
+                    await subscribedHosts.UnsubscribeAsync(host.Url);
                 }
 
-                logger.LogInformation(
-                    "[HOST-POLLING] New host found: {Host}. Creating subscription. Interval: {Seconds}s", host.Url,
-                    host.PollIntervalSeconds);
-
-                var cancellationToken = subscribedHosts.Register(host.Url, stoppingToken);
-                _ = SubscribeToHostAsync(host, cancellationToken);
             }
 
             var activeHostUrls = hosts.Select(host => host.Url);
