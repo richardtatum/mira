@@ -25,11 +25,7 @@ internal class Stream
         
         // Current Stream
         DetailedStreamStatus = ExistingStreamStatus.ToDetailedStreamStatus(currentStream?.IsLive ?? false);
-        if (currentStream is not null)
-        {
-            CurrentViewerCount = currentStream.ViewerCount;
-            CurrentStartTime = currentStream.StartTime;
-        }
+        CurrentViewerCount = currentStream?.ViewerCount ?? 0;
     }
 
     public event SendNewMessageHandler? OnSendNewMessage;
@@ -49,19 +45,17 @@ internal class Stream
     private DateTime? ExistingStreamEndTime { get; }
     private string? Playing { get; set; }
     private int? CurrentViewerCount { get; }
-    private DateTime? CurrentStartTime { get; }
     
 
     // Messaging
     private ulong? MessageId { get; set; }
-    // private bool MessageSent { get; set; }
 
     // Simplified database stream status. The db only cares about online/offline. Further granularity (DetailedStreamStatus)
     // is to allow for easy state management in this class (i.e. determine when to send a new message vs update)
     private StreamStatus Status => DetailedStreamStatus.ToStreamStatus();
     private DateTime StartTime => DetailedStreamStatus switch
     {
-        DetailedStreamStatus.Starting => CurrentStartTime ?? DateTime.UtcNow,
+        DetailedStreamStatus.Starting => DateTime.UtcNow,
         _ => ExistingStreamStartTime ?? DateTime.UtcNow
     };
 
