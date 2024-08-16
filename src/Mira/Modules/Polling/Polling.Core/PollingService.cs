@@ -19,14 +19,15 @@ public class PollingService(
     {
         using var timer = new PeriodicTimer(TimeSpan.FromSeconds(options.Value.NewHostIntervalSeconds));
 
-        var subscribedHosts = new Dictionary<string, CancellationTokenSource>();
+        var subscribedHosts = new SubscriptionTracker(logger);
         do
         {
             logger.LogInformation("[HOST-POLLING] Checking for new hosts...");
             var hosts = await query.GetHostsAsync();
+            
             foreach (var host in hosts)
             {
-                if (subscribedHosts.ContainsKey(host.Url))
+                if (subscribedHosts.Contains(host.Url))
                 {
                     continue;
                 }
@@ -35,21 +36,12 @@ public class PollingService(
                     "[HOST-POLLING] New host found: {Host}. Creating subscription. Interval: {Seconds}s", host.Url,
                     host.PollIntervalSeconds);
 
-                // Create a child of the provided cancellation token
-                var cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(stoppingToken);
-                subscribedHosts[host.Url] = cancellationSource;
-                _ = SubscribeToHostAsync(host, cancellationSource.Token);
+                var cancellationToken = subscribedHosts.Register(host.Url, stoppingToken);
+                _ = SubscribeToHostAsync(host, cancellationToken);
             }
 
-            // These are hosts that were previously subscribed but have since been removed from the DB
-            var staleHosts = subscribedHosts
-                .Where(subscription =>
-                    !hosts.Select(host => host.Url).Contains(subscription.Key)
-                )
-                .Select(entry => (entry.Key, entry.Value))
-                .ToArray();
-
-            await CancelSubscriptionsAsync(staleHosts);
+            var activeHostUrls = hosts.Select(host => host.Url);
+            await subscribedHosts.CleanupAsync(activeHostUrls);
             await timer.WaitForNextTickAsync(stoppingToken);
         } while (!stoppingToken.IsCancellationRequested);
     }
@@ -62,19 +54,5 @@ public class PollingService(
             await service.ExecuteAsync(host.Url);
             await timer.WaitForNextTickAsync(stoppingToken);
         } while (!stoppingToken.IsCancellationRequested);
-    }
-
-    private Task CancelSubscriptionsAsync(
-        IEnumerable<(string hostUrl, CancellationTokenSource cancellationSource)> staleHosts)
-    {
-        var cancellationTasks = staleHosts.Select(entry =>
-        {
-            var (url, cancellationSource) = entry;
-            logger.LogInformation("[HOST-POLLING][{Host}] Host no longer registered in the database. Cancelling.",
-                url);
-            return cancellationSource.CancelAsync();
-        });
-
-        return Task.WhenAll(cancellationTasks);
     }
 }
