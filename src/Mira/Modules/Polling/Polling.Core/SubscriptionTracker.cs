@@ -27,13 +27,13 @@ public class SubscriptionTracker(ILogger logger)
 
     public bool Contains(string hostUrl) => _subscriptions.ContainsKey(hostUrl);
 
-    public async Task Cleanup(IEnumerable<string> activeHostUrls)
+    public async Task CleanupAsync(IEnumerable<string> activeHostUrls)
     {
-        await ClearStaleHosts(activeHostUrls);
-        ClearCancelledHosts();
+        await CleanupStaleHostsAsync(activeHostUrls);
+        CleanupCancelledHosts();
     }
 
-    private void ClearCancelledHosts()
+    private void CleanupCancelledHosts()
     {
         var staleHosts = _subscriptions
             .Where(subscription => subscription.Value.IsCancellationRequested);
@@ -46,7 +46,7 @@ public class SubscriptionTracker(ILogger logger)
         }
     }
 
-    private Task ClearStaleHosts(IEnumerable<string> activeHostUrls)
+    private Task CleanupStaleHostsAsync(IEnumerable<string> activeHostUrls)
     {
         var cancellationTasks = _subscriptions
             .Where(subscription => !activeHostUrls.Contains(subscription.Key))

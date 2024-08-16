@@ -41,7 +41,7 @@ public class PollingService(
             }
 
             var activeHostUrls = hosts.Select(host => host.Url);
-            await subscribedHosts.Cleanup(activeHostUrls);
+            await subscribedHosts.CleanupAsync(activeHostUrls);
             await timer.WaitForNextTickAsync(stoppingToken);
         } while (!stoppingToken.IsCancellationRequested);
     }
