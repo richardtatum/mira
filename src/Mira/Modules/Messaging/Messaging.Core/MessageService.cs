@@ -8,7 +8,7 @@ namespace Messaging.Core;
 
 public class MessageService(DiscordSocketClient discord, ILogger<MessageService> logger) : IMessageService
 {
-    public async Task<ulong?> SendAsync(ulong channelId, StreamStatus status, string url, int viewers, TimeSpan duration, string playing = null)
+    public async Task<ulong?> SendAsync(ulong channelId, StreamStatus status, string url, int viewers, TimeSpan duration, string? playing = null)
     {
         var channel = GetChannel(channelId);
         if (channel is null)
@@ -24,18 +24,27 @@ public class MessageService(DiscordSocketClient discord, ILogger<MessageService>
             StreamStatus.Offline => MessageEmbed.Offline(url, duration, playing),
             _ => throw new ArgumentOutOfRangeException(nameof(status), status, null)
         };
-        
-        var message = await channel.SendMessageAsync(embed: embed);
-        return message.Id;
+
+        try
+        {
+            var message = await channel.SendMessageAsync(embed: embed);
+            return message.Id;
+        }
+        catch (Exception e)
+        {
+            logger.LogError("[MESSAGE-SERVICE][{Url}] Failed to send message to channel {Channel}", url, channelId);
+            logger.LogError(e.Message);
+            return null;
+        }
+
     }
 
     public async Task ModifyAsync(ulong messageId, ulong channelId, StreamStatus status, string url, int viewers, TimeSpan duration, string? playing)
     {
-        // TODO: Check validity off messageId too
         var channel = GetChannel(channelId);
         if (channel is null)
         {
-            logger.LogCritical("[MESSAGE-SERVICE] Failed to retrieve channel for stream {Url}. Channel: {Channel}", url, channelId);
+            logger.LogError("[MESSAGE-SERVICE] Failed to retrieve channel for stream {Url}. Channel: {Channel}", url, channelId);
             return;
         }
         
@@ -46,7 +55,15 @@ public class MessageService(DiscordSocketClient discord, ILogger<MessageService>
             _ => throw new ArgumentOutOfRangeException(nameof(status), status, null)
         };
 
-        await channel.ModifyMessageAsync(messageId, properties => properties.Embed = embed);
+        try
+        {
+            await channel.ModifyMessageAsync(messageId, properties => properties.Embed = embed);
+        }
+        catch (Exception e)
+        {
+            logger.LogError("[MESSAGE-SERVICE][{Url}] Failed to modify message {MessageId} on channel {Channel}", url, messageId, channelId);
+            logger.LogError(e.Message);
+        }
     }
 
     private IMessageChannel? GetChannel(ulong channelId) => discord.GetChannel(channelId) as IMessageChannel;
