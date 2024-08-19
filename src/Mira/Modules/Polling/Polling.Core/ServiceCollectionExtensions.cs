@@ -8,7 +8,9 @@ public static class ServiceCollectionExtensions
 {
     public static void AddPollingService(this IServiceCollection services)
     {
-        services.AddHostedService<PollingService>(); // TODO: Set this to ignore failures
+        services.AddHostedService<PollingHostService>(); // TODO: Set this to ignore failures?
+        services.AddTransient<IHostPollingService, HostPollingService>();
+        services.AddSingleton<ISubscriptionManager, SubscriptionManager>();
         services.AddTransient<QueryRepository>();
         
         services
