@@ -26,7 +26,6 @@ public class SubscriptionManager(IChangeTrackingService service, ILogger<Subscri
         {
             try
             {
-                logger.LogInformation("[SUBSCRIPTIONS][{Host}] Polling.", host.Url);
                 await service.ExecuteAsync(host.Url);
             }
             catch (Exception ex)
