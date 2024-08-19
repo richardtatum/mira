@@ -18,6 +18,7 @@ public class HostPollingService(
     public async Task StartPollingAsync(CancellationToken cancellationToken = default)
     {
         using var timer = new PeriodicTimer(TimeSpan.FromSeconds(_options.NewHostIntervalSeconds));
+        logger.LogInformation("[HOST-POLLING] Starting polling service. Interval set at {Interval}", _options.NewHostIntervalSeconds);
         do
         {
             var hosts = await queryRepository.GetHostsAsync();
