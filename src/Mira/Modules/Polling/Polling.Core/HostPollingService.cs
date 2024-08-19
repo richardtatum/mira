@@ -5,44 +5,38 @@ using Polling.Core.Repositories;
 
 namespace Polling.Core;
 
-public class HostPollingService : IHostPollingService
+public class HostPollingService(
+    QueryRepository queryRepository,
+    ILogger<HostPollingService> logger,
+    ISubscriptionManager subscriptionManager,
+    IOptions<PollingOptions> options)
+    : IHostPollingService
 {
-    private readonly QueryRepository _queryRepository;
-    private readonly ILogger<HostPollingService> _logger;
-    private readonly ISubscriptionManager _subscriptionManager;
-    private readonly PollingOptions _options;
+    private readonly PollingOptions _options = options.Value;
 
-
-    public HostPollingService(QueryRepository queryRepository, ILogger<HostPollingService> logger, ISubscriptionManager subscriptionManager, IOptions<PollingOptions> options)
-    {
-        _queryRepository = queryRepository;
-        _logger = logger;
-        _subscriptionManager = subscriptionManager;
-        _options = options.Value;
-    }
 
     public async Task StartPollingAsync(CancellationToken cancellationToken = default)
     {
         using var timer = new PeriodicTimer(TimeSpan.FromSeconds(_options.NewHostIntervalSeconds));
         do
         {
-            var hosts = await _queryRepository.GetHostsAsync();
+            var hosts = await queryRepository.GetHostsAsync();
             foreach (var host in hosts)
             {
-                if (_subscriptionManager.IsSubscribed(host.Url))
+                if (subscriptionManager.IsSubscribed(host.Url))
                 {
                     continue;
                 }
                 
-                _logger.LogInformation(
+                logger.LogInformation(
                     "[HOST-POLLING] New host found: {Host}. Creating subscription. Interval: {Seconds}s", host.Url,
                     host.PollIntervalSeconds);
                 
-                _subscriptionManager.Subscribe(host, cancellationToken);
+                subscriptionManager.Subscribe(host, cancellationToken);
             }
 
             var activeHosts = hosts.Select(host => host.Url);
-            _subscriptionManager.CleanupSubscriptions(activeHosts);
+            subscriptionManager.CleanupSubscriptions(activeHosts);
 
             await timer.WaitForNextTickAsync(cancellationToken);
         } while (!cancellationToken.IsCancellationRequested);
