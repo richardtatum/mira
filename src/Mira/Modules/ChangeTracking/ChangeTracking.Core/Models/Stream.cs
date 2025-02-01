@@ -1,4 +1,3 @@
-using System.Text.Json;
 using ChangeTracking.Core.Extensions;
 using Shared.Core;
 
@@ -71,7 +70,7 @@ internal class Stream
     };
 
     // Internal meta
-    private DetailedStreamStatus DetailedStreamStatus { get; set; }
+    internal DetailedStreamStatus DetailedStreamStatus { get; set; }
     
     // Only send a new message when a stream is starting and a message hasn't already been sent
     public bool SendNewMessage => DetailedStreamStatus == DetailedStreamStatus.Starting && 
