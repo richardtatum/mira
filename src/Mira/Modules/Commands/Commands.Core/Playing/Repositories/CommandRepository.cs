@@ -10,7 +10,7 @@ public class CommandRepository(DbContext context)
         using var connection = context.CreateConnection();
         var result = await connection.ExecuteAsync(
             @"UPDATE stream SET playing = @playing
-                WHERE id IN (
+                WHERE subscription_id IN (
                     SELECT id
                     FROM subscription
                     WHERE stream_key = @streamKey
