@@ -1,3 +1,4 @@
+using ChangeTracking.Core.Models;
 using ChangeTracking.Core.Repositories;
 using Microsoft.Extensions.Logging;
 using Shared.Core.Interfaces;
@@ -12,6 +13,12 @@ internal class ChangeTrackingService(
     CommandRepository command,
     IMessageService messageService) : IChangeTrackingService
 {
+    private readonly DetailedStreamStatus[] _logStreamStatuses =
+    [
+        DetailedStreamStatus.Starting,
+        DetailedStreamStatus.Ending
+    ];
+
     public async Task ExecuteAsync(string hostUrl)
     {
         var subscriptions = await query.GetSubscriptionsAsync(hostUrl);
@@ -21,9 +28,7 @@ internal class ChangeTrackingService(
             return;
         }
 
-        logger.LogInformation(
-            "[CHANGE-TRACKING][{Host}] {Subscriptions} key subscription(s) found. Checking for stream updates.",
-            hostUrl, subscriptions.Length);
+        var statusChanges = new Dictionary<string, DetailedStreamStatus>();
         var currentStreams = await client.GetStreamsAsync(hostUrl);
         var existingStreams = await query.GetStreamsAsync(subscriptions.Select(x => x.Id));
 
@@ -36,15 +41,38 @@ internal class ChangeTrackingService(
                 var stream = new Stream(hostUrl, subscription, existingStream, currentStream);
                 
                 // Register events
-                stream.OnSendNewMessage += messageService.SendAsync;
-                stream.OnSendUpdateMessage += messageService.ModifyAsync;
+                stream.OnSendNewMessage += (channelId, status, url, viewerCount, duration, playing, image) =>
+                {
+                    RecordStatusChange(subscription.StreamKey, stream.DetailedStreamStatus);
+                    return messageService.SendAsync(channelId, status, url, viewerCount, duration, playing, image);
+                };
+
+                stream.OnSendUpdateMessage += (id, channelId, status, s, i, span, playing, image) =>
+                {
+                    RecordStatusChange(subscription.StreamKey, stream.DetailedStreamStatus);
+                    return messageService.ModifyAsync(id, channelId, status, s, i, span, playing, image);
+                };
+                    
                 stream.OnRecordStateChange += command.UpsertStreamRecord;
 
-                // Fire events
+                // This is a terrible pattern and needs redoing
                 await stream.FireEventsAsync();
             })
             .ToArray();
+        
+        LogStatusChanges(hostUrl, statusChanges);
 
         await Task.WhenAll(streams);
+        return;
+
+        void RecordStatusChange(string streamKey, DetailedStreamStatus status) => statusChanges.TryAdd(streamKey, status);
+    }
+
+    private void LogStatusChanges(string hostUrl, Dictionary<String, DetailedStreamStatus> statusChanges)
+    {
+        foreach (var (streamKey, status) in statusChanges.Where(kv => _logStreamStatuses.Contains(kv.Value)))
+        {
+            logger.LogInformation("[CHANGE-TRACKING][{Host}] '{Subscription}' stream is now {Status}", hostUrl, streamKey, status);
+        }
     }
 }

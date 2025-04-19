@@ -1,4 +1,3 @@
-using System.Text.Json;
 using ChangeTracking.Core.Extensions;
 using Shared.Core;
 
@@ -26,11 +25,7 @@ internal class Stream
         
         // Current Stream
         DetailedStreamStatus = ExistingStreamStatus.ToDetailedStreamStatus(currentStream?.IsLive ?? false);
-        if (currentStream is not null)
-        {
-            CurrentViewerCount = currentStream.ViewerCount;
-            CurrentStartTime = currentStream.StartTime;
-        }
+        CurrentViewerCount = currentStream?.ViewerCount ?? 0;
     }
 
     public event SendNewMessageHandler? OnSendNewMessage;
@@ -51,19 +46,17 @@ internal class Stream
     private string? Playing { get; set; }
     private byte[]? Snapshot { get; set; }
     private int? CurrentViewerCount { get; }
-    private DateTime? CurrentStartTime { get; }
     
 
     // Messaging
     private ulong? MessageId { get; set; }
-    // private bool MessageSent { get; set; }
 
     // Simplified database stream status. The db only cares about online/offline. Further granularity (DetailedStreamStatus)
     // is to allow for easy state management in this class (i.e. determine when to send a new message vs update)
     private StreamStatus Status => DetailedStreamStatus.ToStreamStatus();
     private DateTime StartTime => DetailedStreamStatus switch
     {
-        DetailedStreamStatus.Starting => CurrentStartTime ?? DateTime.UtcNow,
+        DetailedStreamStatus.Starting => DateTime.UtcNow,
         _ => ExistingStreamStartTime ?? DateTime.UtcNow
     };
 
@@ -79,7 +72,7 @@ internal class Stream
     };
 
     // Internal meta
-    private DetailedStreamStatus DetailedStreamStatus { get; set; }
+    internal DetailedStreamStatus DetailedStreamStatus { get; set; }
     
     // Only send a new message when a stream is starting and a message hasn't already been sent
     public bool SendNewMessage => DetailedStreamStatus == DetailedStreamStatus.Starting && 
@@ -99,9 +92,8 @@ internal class Stream
         // We prioritise any new messageIds first
         var messageId = (MessageId ?? ExistingStreamMessageId)!.Value;
 
-        // Ensure all new streams start with an empty playing and snapshot
+        // Ensure all new streams start with an empty playing
         var playing = DetailedStreamStatus == DetailedStreamStatus.Starting ? null : Playing;
-        
         // I need to clear this snapshot on stream starting, but otherwise don't want to update the record if not required
         var snapshot = DetailedStreamStatus == DetailedStreamStatus.Starting ? null : Snapshot;
 

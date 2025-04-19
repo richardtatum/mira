@@ -8,12 +8,14 @@ namespace Messaging.Core;
 
 public class MessageService(DiscordSocketClient discord, ILogger<MessageService> logger) : IMessageService
 {
-    public async Task<ulong?> SendAsync(ulong channelId, StreamStatus status, string url, int viewers, TimeSpan duration, string? playing = null, byte[]? image = null)
+    public async Task<ulong?> SendAsync(ulong channelId, StreamStatus status, string url, int viewers,
+        TimeSpan duration, string? playing = null, byte[]? image = null)
     {
         var channel = GetChannel(channelId);
         if (channel is null)
         {
-            logger.LogCritical("[MESSAGE-SERVICE] Failed to retrieve channel for stream {Url}. Channel: {Channel}", url, channelId);
+            logger.LogCritical("[MESSAGE-SERVICE] Failed to retrieve channel for stream {Url}. Channel: {Channel}", url,
+                channelId);
             return null;
         }
 
@@ -27,30 +29,42 @@ public class MessageService(DiscordSocketClient discord, ILogger<MessageService>
             _ => throw new ArgumentOutOfRangeException(nameof(status), status, null)
         };
 
-        if (image is null)
+
+        try
         {
-            var message = await channel.SendMessageAsync(embed: embed);
-            return message.Id;
+            if (image is null)
+            {
+                var message = await channel.SendMessageAsync(embed: embed);
+                return message.Id;
+            }
+
+            using var stream = new MemoryStream(image);
+            var fileMessage = await channel.SendFileAsync(stream, imageName, embed: embed);
+
+            return fileMessage.Id;
         }
-
-        using var stream = new MemoryStream(image);
-        var fileMessage = await channel.SendFileAsync(stream, imageName, embed: embed);
-
-        return fileMessage.Id;
+        catch (Exception e)
+        {
+            logger.LogError("[MESSAGE-SERVICE][{Url}] Failed to send message to channel {Channel}", url, channelId);
+            logger.LogError(e.Message);
+            return null;
+        }
     }
 
-    public async Task ModifyAsync(ulong messageId, ulong channelId, StreamStatus status, string url, int viewers, TimeSpan duration, string? playing = null, byte[]? image = null)
+    public async Task ModifyAsync(ulong messageId, ulong channelId, StreamStatus status, string url, int viewers,
+        TimeSpan duration, string? playing, byte[]? image = null)
     {
         // TODO: Check validity off messageId too
         var channel = GetChannel(channelId);
         if (channel is null)
         {
-            logger.LogCritical("[MESSAGE-SERVICE] Failed to retrieve channel for stream {Url}. Channel: {Channel}", url, channelId);
+            logger.LogError("[MESSAGE-SERVICE] Failed to retrieve channel for stream {Url}. Channel: {Channel}", url,
+                channelId);
             return;
         }
-        
+
         var imageName = "image.webp";
-        
+
         var embed = status switch
         {
             StreamStatus.Live => MessageEmbed.Live(url, viewers, duration, playing, imageName),
@@ -69,19 +83,20 @@ public class MessageService(DiscordSocketClient discord, ILogger<MessageService>
                 });
                 return;
             }
-            
+
             using var stream = new MemoryStream(image);
-            var attachments = new FileAttachment[] { new (stream, imageName) };
+            var attachments = new FileAttachment[] { new(stream, imageName) };
             await channel.ModifyMessageAsync(messageId, properties =>
             {
                 properties.Embed = embed;
                 properties.Attachments = attachments;
             });
         }
-        catch (Exception ex)
+        catch (Exception e)
         {
-            logger.LogCritical("[MESSAGE-SERVICE] Message Failed to Update: {Ex}", ex);
-            throw;
+            logger.LogError("[MESSAGE-SERVICE][{Url}] Failed to modify message {MessageId} on channel {Channel}", url,
+                messageId, channelId);
+            logger.LogError(e.Message);
         }
     }
 
