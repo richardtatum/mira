@@ -3,3 +3,4 @@ obj/
 /packages/
 riderModule.iml
 /_ReSharper.Caches/
+src/Mira/Bot/appsettings.Development.json
