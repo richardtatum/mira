@@ -32,12 +32,18 @@ internal class ChangeTrackingService(
         var currentStreams = await client.GetStreamsAsync(hostUrl);
         var existingStreams = await query.GetStreamsAsync(subscriptions.Select(x => x.Id));
 
+        var existingStreamsBySubscriptionId = existingStreams
+            .ToDictionary((record => record.SubscriptionId), x => x);
+
+        var currentStreamsByStreamKey = currentStreams
+            .ToDictionary((record => record.StreamKey), x => x);
+
         var streams = subscriptions
             .Select(async subscription =>
             {
                 // Create the stream object which manages the state and any changes
-                var existingStream = existingStreams.FirstOrDefault(x => x.SubscriptionId == subscription.Id);
-                var currentStream = currentStreams.FirstOrDefault(x => x.StreamKey == subscription.StreamKey);
+                var existingStream = existingStreamsBySubscriptionId[subscription.Id];
+                var currentStream = currentStreamsByStreamKey[subscription.StreamKey];
                 var stream = new Stream(hostUrl, subscription, existingStream, currentStream);
                 
                 // Register events

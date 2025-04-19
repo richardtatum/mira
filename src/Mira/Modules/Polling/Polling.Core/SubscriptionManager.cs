@@ -5,7 +5,11 @@ using Shared.Core.Interfaces;
 
 namespace Polling.Core;
 
-public class SubscriptionManager(IChangeTrackingService service, ILogger<SubscriptionManager> logger) : ISubscriptionManager
+public class SubscriptionManager(
+    IChangeTrackingService changeTrackingService,
+    ISnapshotService snapshotService,
+    ILogger<SubscriptionManager> logger
+    ) : ISubscriptionManager
 {
     private readonly ConcurrentDictionary<string, CancellationTokenSource> _subscriptions = new();
     
@@ -26,7 +30,10 @@ public class SubscriptionManager(IChangeTrackingService service, ILogger<Subscri
         {
             try
             {
-                await service.ExecuteAsync(host.Url);
+                await Task.WhenAll(
+                    changeTrackingService.ExecuteAsync(host.Url),
+                    snapshotService.ExecuteAsync(host.Url, token)
+                );
             }
             catch (Exception ex)
             {

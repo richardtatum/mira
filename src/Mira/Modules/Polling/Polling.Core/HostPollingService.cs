@@ -18,7 +18,8 @@ public class HostPollingService(
     public async Task StartPollingAsync(CancellationToken cancellationToken = default)
     {
         using var timer = new PeriodicTimer(TimeSpan.FromSeconds(_options.NewHostIntervalSeconds));
-        logger.LogInformation("[HOST-POLLING] Starting polling service. Interval set at {Interval}", _options.NewHostIntervalSeconds);
+        logger.LogInformation("[HOST-POLLING] Starting polling service. Interval set at {Interval}",
+            _options.NewHostIntervalSeconds);
         do
         {
             var hosts = await queryRepository.GetHostsAsync();
@@ -28,11 +29,11 @@ public class HostPollingService(
                 {
                     continue;
                 }
-                
+
                 logger.LogInformation(
                     "[HOST-POLLING] New host found: {Host}. Creating subscription. Interval: {Seconds}s", host.Url,
                     host.PollIntervalSeconds);
-                
+
                 subscriptionManager.Subscribe(host, cancellationToken);
             }
 
