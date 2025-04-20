@@ -18,7 +18,8 @@ public class SnapShotService(
 
     public async Task ExecuteAsync(string hostUrl, CancellationToken cancellationToken = default)
     {
-        if (!_options.Enabled)
+        var currentOptions = snapshotOptions.Value;
+        if (!currentOptions.Enabled)
         {
             logger.LogInformation("[SNAPSHOT] Snapshots disabled. Skipping.");
             return;
