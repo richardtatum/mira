@@ -19,6 +19,7 @@ public class ImageConverterActor(
     public ChannelWriter<FrameMessage> Writer => _channel.Writer;
     private readonly Channel<FrameMessage> _channel = Channel.CreateUnbounded<FrameMessage>();
     private readonly ConcurrentDictionary<string, DateTime> _lastProcessed = new();
+    private readonly SnapshotOptions _options = options.Value;
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
@@ -26,7 +27,7 @@ public class ImageConverterActor(
         {
             var now = DateTime.UtcNow;
             if (_lastProcessed.TryGetValue(message.StreamKey, out var lastProcessed) &&
-                now < lastProcessed.AddSeconds(options.Value.ProcessFrequencySeconds))
+                now < lastProcessed.AddSeconds(_options.ProcessFrequencySeconds))
             {
                 // Prevent spamming with new frames, as the connection tends to do
                 logger.LogDebug(
@@ -84,7 +85,7 @@ public class ImageConverterActor(
             using var stream = new MemoryStream();
             await image.SaveAsWebpAsync(stream, new WebpEncoder
             {
-                Quality = options.Value.QualityLevel,
+                Quality = _options.QualityLevel,
             });
 
             return stream.ToArray();
