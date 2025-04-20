@@ -26,7 +26,7 @@ public class SnapShotService(
         }
 
         var streamKeys = await queryRepository.GetLiveStreamKeysAsync(hostUrl, cancellationToken);
-        logger.LogInformation("[SNAPSHOT][{Host}] {Count} live stream(s) found. Attempting to obtain snapshots.",
+        logger.LogDebug("[SNAPSHOT][{Host}] {Count} live stream(s) found. Attempting to obtain snapshots.",
             hostUrl, streamKeys.Length);
         await Task.WhenAll(streamKeys.Select(key => ExecuteAsync(hostUrl, key, cancellationToken)));
     }
