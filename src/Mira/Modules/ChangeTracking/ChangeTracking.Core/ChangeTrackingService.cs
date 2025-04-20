@@ -42,8 +42,8 @@ internal class ChangeTrackingService(
             .Select(async subscription =>
             {
                 // Create the stream object which manages the state and any changes
-                var existingStream = existingStreamsBySubscriptionId[subscription.Id];
-                var currentStream = currentStreamsByStreamKey[subscription.StreamKey];
+                var existingStream = existingStreamsBySubscriptionId.GetValueOrDefault(subscription.Id);
+                var currentStream = currentStreamsByStreamKey.GetValueOrDefault(subscription.StreamKey);
                 var stream = new Stream(hostUrl, subscription, existingStream, currentStream);
                 
                 // Register events
