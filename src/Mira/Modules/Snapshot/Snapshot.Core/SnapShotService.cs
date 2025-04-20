@@ -14,7 +14,6 @@ public class SnapShotService(
     IActor<FrameMessage> imageConverterActor)
     : ISnapshotService
 {
-    private readonly SnapshotOptions _options = snapshotOptions.Value;
 
     public async Task ExecuteAsync(string hostUrl, CancellationToken cancellationToken = default)
     {
