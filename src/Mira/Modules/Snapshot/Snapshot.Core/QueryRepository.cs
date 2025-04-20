@@ -9,7 +9,7 @@ public class QueryRepository(DbContext context)
     {
         using var connection = context.CreateConnection();
         var command = new CommandDefinition(
-@"SELECT sub.stream_key 
+@"SELECT DISTINCT sub.stream_key 
             FROM subscription sub
             INNER JOIN host h ON sub.host_id = h.id
             INNER JOIN stream s ON s.subscription_id = sub.id
