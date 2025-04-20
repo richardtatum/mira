@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Shared.Core.Interfaces;
 using Snapshot.Core.Actors;
 using Snapshot.Core.Models;
@@ -21,7 +22,8 @@ public static class ServiceCollectionExtensions
         {
             var next = sp.GetRequiredService<IActor<ConvertedFrameMessage>>();
             var logger = sp.GetRequiredService<ILogger<ImageConverterActor>>();
-            return new ImageConverterActor(next.Writer, logger);
+            var options = sp.GetRequiredService<IOptions<SnapshotOptions>>();
+            return new ImageConverterActor(next.Writer, logger, options);
         });
         services.AddHostedService<ActorBackgroundService<FrameMessage>>();
         services.AddHostedService<ActorBackgroundService<ConvertedFrameMessage>>();
