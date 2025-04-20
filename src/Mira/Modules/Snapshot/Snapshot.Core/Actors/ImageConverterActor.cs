@@ -24,7 +24,7 @@ public class ImageConverterActor(
         {
             var now = DateTime.UtcNow;
             if (_lastProcessed.TryGetValue(message.StreamKey, out var lastProcessed) &&
-                now > lastProcessed.AddSeconds(30))
+                now < lastProcessed.AddSeconds(30))
             {
                 logger.LogInformation(
                     "[IMAGE-CONVERTER] Skipping frame for stream '{StreamKey}' as it was last processed at {lastProcessed}.",
