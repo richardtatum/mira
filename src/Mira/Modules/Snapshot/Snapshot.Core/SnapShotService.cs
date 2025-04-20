@@ -55,17 +55,17 @@ public class SnapShotService(
     {
         var frameWritten = false;
 
-        logger.LogInformation("[SNAPSHOT][{Host}][{Key}] Attempting snapshot.", hostUrl, streamKey);
+        logger.LogDebug("[SNAPSHOT][{Host}][{Key}] Attempting snapshot.", hostUrl, streamKey);
         using var connection = await whepConnectionFactory.CreateAsync(hostUrl, streamKey, cancellationToken);
         if (connection is null)
         {
-            logger.LogError("[SNAPSHOT][{Host}][{Key}] Failed to create connection.", hostUrl, streamKey);
+            logger.LogWarning("[SNAPSHOT][{Host}][{Key}] Failed to create connection.", hostUrl, streamKey);
             return;
         }
 
         connection.FrameReceived += async image =>
         {
-            logger.LogInformation("[SNAPSHOT][{Host}][{Key}] New frame received.", hostUrl, streamKey);
+            logger.LogDebug("[SNAPSHOT][{Host}][{Key}] New frame received.", hostUrl, streamKey);
             var message = new FrameMessage(streamKey, image.Sample, image.Width, image.Height, image.Stride);
             await imageConverterActor.Writer.WriteAsync(message, cancellationToken);
             frameWritten = true;
@@ -73,11 +73,11 @@ public class SnapShotService(
 
         connection.Disposed += () =>
         {
-            logger.LogInformation("[SNAPSHOT][{Host}][{Key}] Connection closed.", hostUrl, streamKey);
+            logger.LogDebug("[SNAPSHOT][{Host}][{Key}] Connection closed.", hostUrl, streamKey);
         };
 
         await connection.StartAsync();
-        logger.LogInformation("[SNAPSHOT][{Host}][{Key}] Connection open.", hostUrl, streamKey);
+        logger.LogDebug("[SNAPSHOT][{Host}][{Key}] Connection open.", hostUrl, streamKey);
 
         while (!frameWritten && !cancellationToken.IsCancellationRequested)
         {
