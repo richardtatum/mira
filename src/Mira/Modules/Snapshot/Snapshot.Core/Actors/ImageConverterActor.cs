@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 using System.Runtime.InteropServices;
 using System.Threading.Channels;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Webp;
 using SixLabors.ImageSharp.PixelFormats;
@@ -11,7 +12,8 @@ namespace Snapshot.Core.Actors;
 
 public class ImageConverterActor(
     ChannelWriter<ConvertedFrameMessage> next,
-    ILogger<ImageConverterActor> logger
+    ILogger<ImageConverterActor> logger,
+    IOptions<SnapshotOptions> options
 ) : IActor<FrameMessage>
 {
     public ChannelWriter<FrameMessage> Writer => _channel.Writer;
@@ -24,7 +26,7 @@ public class ImageConverterActor(
         {
             var now = DateTime.UtcNow;
             if (_lastProcessed.TryGetValue(message.StreamKey, out var lastProcessed) &&
-                now < lastProcessed.AddSeconds(30))
+                now < lastProcessed.AddSeconds(options.Value.ProcessFrequencySeconds))
             {
                 logger.LogInformation(
                     "[IMAGE-CONVERTER] Skipping frame for stream '{StreamKey}' as it was last processed at {lastProcessed}.",
@@ -81,7 +83,7 @@ public class ImageConverterActor(
             using var stream = new MemoryStream();
             await image.SaveAsWebpAsync(stream, new WebpEncoder
             {
-                Quality = 50
+                Quality = options.Value.QualityLevel,
             });
 
             return stream.ToArray();
