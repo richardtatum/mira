@@ -28,14 +28,15 @@ public class ImageConverterActor(
             if (_lastProcessed.TryGetValue(message.StreamKey, out var lastProcessed) &&
                 now < lastProcessed.AddSeconds(options.Value.ProcessFrequencySeconds))
             {
-                logger.LogInformation(
+                // Prevent spamming with new frames, as the connection tends to do
+                logger.LogDebug(
                     "[IMAGE-CONVERTER] Skipping frame for stream '{StreamKey}' as it was last processed at {lastProcessed}.",
                     message.StreamKey, lastProcessed);
                 continue;
             }
 
             _lastProcessed[message.StreamKey] = now;
-            logger.LogInformation("[IMAGE-CONVERTER] Converting frame for stream '${StreamKey}'.", message.StreamKey);
+            logger.LogDebug("[IMAGE-CONVERTER] Converting frame for stream '${StreamKey}'.", message.StreamKey);
             var converted = await ConvertFrameToBytesAsync(message.Ptr, message.Width, message.Height, message.Stride);
             if (converted.Length <= 0)
             {
