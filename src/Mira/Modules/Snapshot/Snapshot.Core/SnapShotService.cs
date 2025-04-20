@@ -27,7 +27,28 @@ public class SnapShotService(
         var streamKeys = await queryRepository.GetLiveStreamKeysAsync(hostUrl, cancellationToken);
         logger.LogDebug("[SNAPSHOT][{Host}] {Count} live stream(s) found. Attempting to obtain snapshots.",
             hostUrl, streamKeys.Length);
-        await Task.WhenAll(streamKeys.Select(key => ExecuteAsync(hostUrl, key, cancellationToken)));
+
+        // Create a new cancellation token with the parent one as the source. Set a timeout to prevent 'ExecuteAsync' from
+        // running forever
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        var frameTimeout = TimeSpan.FromSeconds(currentOptions.FrameTimeoutSeconds);
+        cts.CancelAfter(frameTimeout);
+
+        var token = cts.Token;
+        var tasks = streamKeys.Select(key => ExecuteAsync(hostUrl, key, token));
+        
+        try
+        {
+            await Task.WhenAll(tasks);
+        }
+        catch (OperationCanceledException)
+        {
+            logger.LogWarning("[SNAPSHOT][{Host}] Timed out attempting to obtain snapshots.", hostUrl);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "[SNAPSHOT][{Host}] Unexpected error during snapshot collection.", hostUrl);
+        }
     }
 
     public async Task ExecuteAsync(string hostUrl, string streamKey, CancellationToken cancellationToken = default)
