@@ -17,7 +17,7 @@ public class DatabaseWriterActor(
         await foreach (var message in _channel.Reader.ReadAllAsync(cancellationToken))
         {
             await commandRepository.SaveSnapshotAsync(message.StreamKey, message.Frame, cancellationToken);
-            logger.LogInformation("[DATABASE-WRITER] Snapshot saved for ${StreamKey}", message.StreamKey);
+            logger.LogDebug("[DATABASE-WRITER] Snapshot saved for ${StreamKey}", message.StreamKey);
         }
     }
 }
