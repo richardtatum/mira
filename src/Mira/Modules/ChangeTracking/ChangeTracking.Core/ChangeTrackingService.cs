@@ -2,6 +2,7 @@ using ChangeTracking.Core.Models;
 using ChangeTracking.Core.Repositories;
 using Microsoft.Extensions.Logging;
 using Shared.Core.Interfaces;
+using Shared.Core.Models;
 using Stream = ChangeTracking.Core.Models.Stream;
 
 namespace ChangeTracking.Core;
@@ -19,17 +20,17 @@ internal class ChangeTrackingService(
         DetailedStreamStatus.Ending
     ];
 
-    public async Task ExecuteAsync(string hostUrl)
+    public async Task ExecuteAsync(Host host)
     {
-        var subscriptions = await query.GetSubscriptionsAsync(hostUrl);
+        var subscriptions = await query.GetSubscriptionsAsync(host.Url);
         if (subscriptions.Length == 0)
         {
-            logger.LogInformation("[CHANGE-TRACKING][{Host}] No key subscriptions found. Skipping.", hostUrl);
+            logger.LogInformation("[CHANGE-TRACKING][{HostUrl}] No key subscriptions found. Skipping.", host.Url);
             return;
         }
 
         var statusChanges = new Dictionary<string, DetailedStreamStatus>();
-        var currentStreams = await client.GetStreamsAsync(hostUrl);
+        var currentStreams = await client.GetStreamsAsync(host);
         var existingStreams = await query.GetStreamsAsync(subscriptions.Select(x => x.Id));
 
         var streams = subscriptions
@@ -38,7 +39,7 @@ internal class ChangeTrackingService(
                 // Create the stream object which manages the state and any changes
                 var existingStream = existingStreams.FirstOrDefault(x => x.SubscriptionId == subscription.Id);
                 var currentStream = currentStreams.FirstOrDefault(x => x.StreamKey == subscription.StreamKey);
-                var stream = new Stream(hostUrl, subscription, existingStream, currentStream);
+                var stream = new Stream(host.Url, subscription, existingStream, currentStream);
                 
                 // Register events
                 stream.OnSendNewMessage += (channelId, status, url, viewerCount, duration, playing) =>
@@ -60,7 +61,7 @@ internal class ChangeTrackingService(
             })
             .ToArray();
         
-        LogStatusChanges(hostUrl, statusChanges);
+        LogStatusChanges(host.Url, statusChanges);
 
         await Task.WhenAll(streams);
         return;
