@@ -2,6 +2,7 @@ CREATE TABLE IF NOT EXISTS host (
     id INTEGER PRIMARY KEY NOT NULL,
     url TEXT NOT NULL,
     poll_interval_seconds INTEGER DEFAULT 30 NOT NULL,
+    auth_header TEXT NULL,
     guild_id INTEGER NOT NULL,
     created_by INTEGER NOT NULL,
     UNIQUE (url, guild_id)

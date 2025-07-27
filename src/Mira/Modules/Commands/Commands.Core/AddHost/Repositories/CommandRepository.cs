@@ -11,11 +11,12 @@ public class CommandRepository(DbContext context)
         using var connection = context.CreateConnection();
         await connection.ExecuteAsync(
             @"INSERT INTO host
-                (url, poll_interval_seconds, guild_id, created_by)
-                VALUES (@url, @pollIntervalSeconds, @guildId, @createdBy)", new
+                (url, poll_interval_seconds, auth_header, guild_id, created_by)
+                VALUES (@url, @pollIntervalSeconds, @authHeader, @guildId, @createdBy)", new
             {
                 url = host.Url,
                 pollIntervalSeconds = host.PollIntervalSeconds,
+                authHeader = host.AuthHeader,
                 guildId = host.GuildId,
                 createdBy = host.CreatedBy
             });
