@@ -1,7 +1,7 @@
 using System.Collections.Concurrent;
 using Microsoft.Extensions.Logging;
-using Polling.Core.Models;
 using Shared.Core.Interfaces;
+using Shared.Core.Models;
 
 namespace Polling.Core;
 
@@ -26,7 +26,7 @@ public class SubscriptionManager(IChangeTrackingService service, ILogger<Subscri
         {
             try
             {
-                await service.ExecuteAsync(host.Url);
+                await service.ExecuteAsync(host);
             }
             catch (Exception ex)
             {

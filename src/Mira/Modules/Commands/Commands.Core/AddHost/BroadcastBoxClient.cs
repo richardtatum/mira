@@ -1,3 +1,4 @@
+using System.Net.Http.Headers;
 using Commands.Core.AddHost.Options;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -9,7 +10,7 @@ public class BroadcastBoxClient(
     ILogger<BroadcastBoxClient> logger,
     IOptions<PollingOptions> options)
 {
-    public async Task<bool> IsVerifiedBroadcastBoxHostAsync(string hostUrl)
+    public async Task<bool> IsVerifiedBroadcastBoxHostAsync(string hostUrl, string? authHeader = null)
     {
         if (string.IsNullOrWhiteSpace(hostUrl))
         {
@@ -23,8 +24,13 @@ public class BroadcastBoxClient(
 
         try
         {
-            var result = await client.GetAsync($"{hostUrl}/api/status");
-            return result.IsSuccessStatusCode;
+            var request = new HttpRequestMessage(HttpMethod.Get, $"{hostUrl}/api/status");
+            if (!string.IsNullOrWhiteSpace(authHeader))
+            {
+                request.Headers.TryAddWithoutValidation("Authorization", authHeader);
+            }
+            var response = await client.SendAsync(request);
+            return response.IsSuccessStatusCode;
         }
         catch (TaskCanceledException ex)
         {

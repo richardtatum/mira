@@ -2,14 +2,22 @@ using Commands.Core.AddHost.Models;
 using Commands.Core.AddHost.Repositories;
 using Discord;
 using Discord.WebSocket;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace Commands.Core.AddHost;
 
-public class SlashCommand(BroadcastBoxClient client, CommandRepository commandRepository, QueryRepository queryRepository, ILogger<SlashCommand> logger) : ISlashCommand
+public class SlashCommand(
+    BroadcastBoxClient client, 
+    CommandRepository commandRepository, 
+    QueryRepository queryRepository, 
+    ILogger<SlashCommand> logger,
+    IConfiguration configuration
+    ) : ISlashCommand
 {
     public string Name => "add-host";
     private const string HostOptionName = "url";
+    private const string HostAuthHeaderOptionName = "auth";
     private const string PollIntervalOptionName = "poll-interval";
 
     public ApplicationCommandProperties BuildCommand() =>
@@ -30,7 +38,12 @@ public class SlashCommand(BroadcastBoxClient client, CommandRepository commandRe
                     .AddChoice("60 seconds", 60)
                     .AddChoice("90 seconds", 90)
                     .AddChoice("120 seconds", 120)
-                    .WithType(ApplicationCommandOptionType.Number)
+                    .WithType(ApplicationCommandOptionType.Number),
+                new SlashCommandOptionBuilder()
+                    .WithName(HostAuthHeaderOptionName)
+                    .WithDescription("(Optional) The auth header of the host you wish to add.")
+                    .WithRequired(false)
+                    .WithType(ApplicationCommandOptionType.String)
             ).Build();
 
     public async Task RespondAsync(SocketSlashCommand command)
@@ -48,7 +61,7 @@ public class SlashCommand(BroadcastBoxClient client, CommandRepository commandRe
             logger.LogCritical("[SLASH-COMMAND][{Name}] Failed to retrieve the value from the host option. Received: {HostUrl}", Name, hostUrl);
             return;
         }
-
+        
         // Discord.NET uses doubles to handle numbers, but as we are providing all possible outcomes we can just
         // cast this without too much of a worry
         var interval = (int)command.Data.Options.GetValue<double>(PollIntervalOptionName);
@@ -61,7 +74,7 @@ public class SlashCommand(BroadcastBoxClient client, CommandRepository commandRe
         
         await command.DeferAsync();
 
-        var isValidUrl = IsValidUrl(hostUrl, out var validHostUrl);
+        var isValidUrl = IsValidUrl(hostUrl, out var validHostUri);
         if (!isValidUrl)
         {
             logger.LogInformation("[SLASH-COMMAND][{Name}] User provided invalid url: {Url}", Name, hostUrl);
@@ -70,7 +83,8 @@ public class SlashCommand(BroadcastBoxClient client, CommandRepository commandRe
             return;
         }
 
-        var hostExists = await queryRepository.HostExistsAsync(validHostUrl!, guildId.Value);
+        var validHostUrl = validHostUri!.GetLeftPart(UriPartial.Authority);
+        var hostExists = await queryRepository.HostExistsAsync(validHostUrl, guildId.Value);
         if (hostExists)
         {
             logger.LogInformation("[SLASH-COMMAND][{Name}] User provided url for host that already exists: {Url}", Name, hostUrl);
@@ -79,7 +93,8 @@ public class SlashCommand(BroadcastBoxClient client, CommandRepository commandRe
             return;
         }
 
-        var validHost = await client.IsVerifiedBroadcastBoxHostAsync(validHostUrl!);
+        var authHeader = RetrieveAuthHeader(validHostUri, command.Data);
+        var validHost = await client.IsVerifiedBroadcastBoxHostAsync(validHostUrl!, authHeader);
         if (!validHost)
         {
             logger.LogInformation("[SLASH-COMMAND][{Name}] User provided url for host that we were unable to contact: {Url}", Name, hostUrl);
@@ -90,7 +105,7 @@ public class SlashCommand(BroadcastBoxClient client, CommandRepository commandRe
             return;
         }
 
-        var host = new Host(validHostUrl!, interval, guildId.Value, command.User.Id);
+        var host = new Host(validHostUrl!, interval, guildId.Value, command.User.Id, authHeader);
         await commandRepository.AddHostAsync(host);
         var successEmbed =
             GenerateSuccessEmbed(
@@ -98,7 +113,7 @@ public class SlashCommand(BroadcastBoxClient client, CommandRepository commandRe
         await command.FollowupAsync(embed: successEmbed);
     }
     
-    private static bool IsValidUrl(string url, out string? validUrl)
+    private static bool IsValidUrl(string url, out Uri? validUrl)
     {
         validUrl = null;
         if (!url.StartsWith("http://") && !url.StartsWith("https://"))
@@ -124,8 +139,30 @@ public class SlashCommand(BroadcastBoxClient client, CommandRepository commandRe
             return false;
         }
 
-        validUrl = uri.GetLeftPart(UriPartial.Authority);
+        // validUrl = uri.GetLeftPart(UriPartial.Authority);
+        validUrl = uri;
         return true;
+    }
+
+    private string? RetrieveAuthHeader(Uri hostUrl, SocketSlashCommandData commandData)
+    {
+        var providedAuthHeader = commandData.Options.GetValue<string>(HostAuthHeaderOptionName);
+        if (!string.IsNullOrWhiteSpace(providedAuthHeader) )
+        {
+            return providedAuthHeader;
+        }
+
+        // Fly.io doesn't support special characters as env keys, only alphanumeric and underscores
+        var urlAsEnvKey = hostUrl.Host.Replace(".", "_");
+        var fallbackAuthHeader = configuration.GetValue<string>($"FallbackAuthHeaders:{urlAsEnvKey}");
+        if (string.IsNullOrWhiteSpace(fallbackAuthHeader))
+        {
+            logger.LogInformation("[SLASH-COMMAND][{Name}] No auth header provided for '{Url}' and no fallback found. Returning null.",  Name, hostUrl);
+            return null;
+        }
+        
+        logger.LogInformation("[SLASH-COMMAND][{Name}] Using fallback auth header found for '{Url}'.",  Name, hostUrl);
+        return fallbackAuthHeader;
     }
 
     private static Embed GenerateFailedEmbed(string description) =>
