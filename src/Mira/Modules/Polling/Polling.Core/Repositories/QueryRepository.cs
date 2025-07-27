@@ -1,6 +1,6 @@
 using Dapper;
-using Polling.Core.Models;
 using Shared.Core;
+using Shared.Core.Models;
 
 namespace Polling.Core.Repositories;
 

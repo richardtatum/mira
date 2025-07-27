@@ -1,5 +1,5 @@
 
-using Polling.Core.Models;
+using Shared.Core.Models;
 
 namespace Polling.Core;
 

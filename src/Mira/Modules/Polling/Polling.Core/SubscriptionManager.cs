@@ -1,7 +1,7 @@
 using System.Collections.Concurrent;
 using Microsoft.Extensions.Logging;
-using Polling.Core.Models;
 using Shared.Core.Interfaces;
+using Shared.Core.Models;
 
 namespace Polling.Core;
 
