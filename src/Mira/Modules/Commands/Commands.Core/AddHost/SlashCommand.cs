@@ -10,6 +10,7 @@ public class SlashCommand(BroadcastBoxClient client, CommandRepository commandRe
 {
     public string Name => "add-host";
     private const string HostOptionName = "url";
+    private const string HostAuthHeaderOptionName = "auth";
     private const string PollIntervalOptionName = "poll-interval";
 
     public ApplicationCommandProperties BuildCommand() =>
@@ -30,7 +31,12 @@ public class SlashCommand(BroadcastBoxClient client, CommandRepository commandRe
                     .AddChoice("60 seconds", 60)
                     .AddChoice("90 seconds", 90)
                     .AddChoice("120 seconds", 120)
-                    .WithType(ApplicationCommandOptionType.Number)
+                    .WithType(ApplicationCommandOptionType.Number),
+                new SlashCommandOptionBuilder()
+                    .WithName(HostAuthHeaderOptionName)
+                    .WithDescription("(Optional) The auth header of the host you wish to add.")
+                    .WithRequired(false)
+                    .WithType(ApplicationCommandOptionType.String)
             ).Build();
 
     public async Task RespondAsync(SocketSlashCommand command)
@@ -48,7 +54,7 @@ public class SlashCommand(BroadcastBoxClient client, CommandRepository commandRe
             logger.LogCritical("[SLASH-COMMAND][{Name}] Failed to retrieve the value from the host option. Received: {HostUrl}", Name, hostUrl);
             return;
         }
-
+        
         // Discord.NET uses doubles to handle numbers, but as we are providing all possible outcomes we can just
         // cast this without too much of a worry
         var interval = (int)command.Data.Options.GetValue<double>(PollIntervalOptionName);
@@ -79,7 +85,8 @@ public class SlashCommand(BroadcastBoxClient client, CommandRepository commandRe
             return;
         }
 
-        var validHost = await client.IsVerifiedBroadcastBoxHostAsync(validHostUrl!);
+        var authHeader = command.Data.Options.GetValue<string>(HostAuthHeaderOptionName);
+        var validHost = await client.IsVerifiedBroadcastBoxHostAsync(validHostUrl!, authHeader);
         if (!validHost)
         {
             logger.LogInformation("[SLASH-COMMAND][{Name}] User provided url for host that we were unable to contact: {Url}", Name, hostUrl);
@@ -90,7 +97,7 @@ public class SlashCommand(BroadcastBoxClient client, CommandRepository commandRe
             return;
         }
 
-        var host = new Host(validHostUrl!, interval, guildId.Value, command.User.Id);
+        var host = new Host(validHostUrl!, interval, guildId.Value, command.User.Id, authHeader);
         await commandRepository.AddHostAsync(host);
         var successEmbed =
             GenerateSuccessEmbed(
