@@ -12,7 +12,7 @@ public class QueryRepository(DbContext context)
         var results = await connection.QueryAsync<Host>(
             @"SELECT h.url, MIN(h.poll_interval_seconds) pollIntervalSeconds, h.auth_header authHeader
                 FROM host h
-                INNER JOIN subscriptions s ON h.id = s.host_id
+                INNER JOIN subscription s ON h.id = s.host_id
                 GROUP BY h.url"
         );
 
